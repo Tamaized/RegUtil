@@ -868,7 +868,7 @@ public class RegUtil {
 		}
 	}
 
-	record AttributeData(Supplier<ModAttribute> attribute, AttributeModifier.Operation op, double value) {
+	public record AttributeData(Supplier<ModAttribute> attribute, AttributeModifier.Operation op, double value) {
 		static AttributeData make(Supplier<ModAttribute> attribute, AttributeModifier.Operation op, double value) {
 			return new AttributeData(attribute, op, value);
 		}
