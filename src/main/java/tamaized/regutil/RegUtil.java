@@ -162,13 +162,13 @@ public class RegUtil {
 			register.register(bus);
 	}
 
-	static <R extends IForgeRegistryEntry<R>> DeferredRegister<R> create(IForgeRegistry<R> type) {
+	public static <R extends IForgeRegistryEntry<R>> DeferredRegister<R> create(IForgeRegistry<R> type) {
 		DeferredRegister<R> def = DeferredRegister.create(type, RegUtil.MODID);
 		REGISTERS.add(def);
 		return def;
 	}
 
-	static Function<Integer, Multimap<Attribute, AttributeModifier>> makeAttributeFactory(AttributeData... data) {
+	public static Function<Integer, Multimap<Attribute, AttributeModifier>> makeAttributeFactory(AttributeData... data) {
 		return (slot) -> {
 			ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
 			for (AttributeData attribute : data) {
@@ -179,23 +179,11 @@ public class RegUtil {
 		};
 	}
 
-	enum ItemProps {
-		DEFAULT(() -> new Item.Properties().tab(RegUtil.CREATIVE_TAB)),
+	public record ItemProps(Supplier<Item.Properties> properties) {
 
-		VOIDIC_CRYSTAL(() -> DEFAULT.get().fireResistant());
-
-		private final Supplier<Item.Properties> properties;
-
-		ItemProps(Supplier<Item.Properties> properties) {
-			this.properties = properties;
-		}
-
-		Item.Properties get() {
-			return properties.get();
-		}
 	}
 
-	public class ItemTier implements Tier {
+	public static class ItemTier implements Tier {
 		private final String name;
 		private final int harvestLevel;
 		private final int maxUses;
@@ -249,7 +237,7 @@ public class RegUtil {
 		}
 	}
 
-	public class ArmorMaterial implements net.minecraft.world.item.ArmorMaterial { // KB Resist max = 0.25 (0.25 * 4 = 1 = 100%)
+	public static class ArmorMaterial implements net.minecraft.world.item.ArmorMaterial { // KB Resist max = 0.25 (0.25 * 4 = 1 = 100%)
 		private static final int[] MAX_DAMAGE_ARRAY = new int[]{13, 15, 16, 11};
 		private final String name;
 		private final int maxDamageFactor;
@@ -338,7 +326,7 @@ public class RegUtil {
 			return stack.isDamageableItem() && stack.getDamageValue() >= stack.getMaxDamage() - 1;
 		}
 
-		static RegistryObject<Item> sword(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> sword(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_sword"), () -> new SwordItem(tier, 3, -2.4F, properties) {
 
 				@Override
@@ -380,7 +368,7 @@ public class RegUtil {
 			});
 		}
 
-		static RegistryObject<Item> shield(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> shield(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_shield"), () -> new ShieldItem(properties.defaultDurability(tier.getUses())) {
 
 				@Override
@@ -437,7 +425,7 @@ public class RegUtil {
 			return o;
 		}
 
-		static RegistryObject<Item> bow(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> bow(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
 			return registerBow(Items.BOW, REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_bow"), () -> new BowItem(properties.defaultDurability(tier.getUses())) {
 
 				@Override
@@ -485,7 +473,7 @@ public class RegUtil {
 			}));
 		}
 
-		static RegistryObject<Item> xbow(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> xbow(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
 			return registerBow(Items.CROSSBOW, REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_xbow"), () -> new CrossbowItem(properties.defaultDurability(tier.getUses())) {
 
 				@Override
@@ -545,7 +533,7 @@ public class RegUtil {
 			}));
 		}
 
-		static RegistryObject<Item> axe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> axe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_axe"), () -> new LootingAxe(tier, 5F, -3.0F, properties) {
 
 				@Override
@@ -603,7 +591,7 @@ public class RegUtil {
 			});
 		}
 
-		static RegistryObject<Item> pickaxe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> pickaxe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_pickaxe"), () -> new PickaxeItem(tier, 1, -2.8F, properties) {
 
 				@Override
@@ -650,7 +638,7 @@ public class RegUtil {
 			});
 		}
 
-		static RegistryObject<Item> shovel(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> shovel(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_shovel"), () -> new ShovelItem(tier, 1.5F, -3.0F, properties) {
 
 				@Override
@@ -697,7 +685,7 @@ public class RegUtil {
 			});
 		}
 
-		static RegistryObject<Item> hoe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> hoe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_hoe"), () -> new HoeItem(tier, -3, 0.0F, properties) {
 
 				@Override
@@ -744,23 +732,23 @@ public class RegUtil {
 			});
 		}
 
-		static RegistryObject<Item> helmet(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> helmet(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
 			return wrapArmorItemRegistration(tier, REGISTRY.register(tier.getName().toLowerCase(Locale.US).concat("_helmet"), armorFactory(tier, EquipmentSlot.HEAD, properties, factory)));
 		}
 
-		static RegistryObject<Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
 			return chest(tier, properties, factory, (stack, tick) -> false);
 		}
 
-		static RegistryObject<Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra) {
+		public static RegistryObject<Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra) {
 			return wrapArmorItemRegistration(tier, REGISTRY.register(tier.getName().toLowerCase(Locale.US).concat("_chest"), armorFactory(tier, EquipmentSlot.CHEST, properties, factory, elytra)));
 		}
 
-		static RegistryObject<Item> legs(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> legs(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
 			return wrapArmorItemRegistration(tier, REGISTRY.register(tier.getName().toLowerCase(Locale.US).concat("_legs"), armorFactory(tier, EquipmentSlot.LEGS, properties, factory)));
 		}
 
-		static RegistryObject<Item> boots(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> boots(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
 			return wrapArmorItemRegistration(tier, REGISTRY.register(tier.getName().toLowerCase(Locale.US).concat("_boots"), armorFactory(tier, EquipmentSlot.FEET, properties, factory)));
 		}
 
@@ -869,7 +857,7 @@ public class RegUtil {
 
 	}
 
-	static class ModAttribute extends Attribute {
+	public static class ModAttribute extends Attribute {
 		final UUID id;
 		final String type;
 
