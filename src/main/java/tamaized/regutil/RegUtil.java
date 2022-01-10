@@ -861,7 +861,7 @@ public class RegUtil {
 		final UUID id;
 		final String type;
 
-		ModAttribute(String name, float defaultValue, UUID id, String type) {
+		public ModAttribute(String name, float defaultValue, UUID id, String type) {
 			super(name, defaultValue);
 			this.id = id;
 			this.type = type;
