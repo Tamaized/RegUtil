@@ -118,6 +118,7 @@ public class RegUtil {
 
 	public static void setup(String modid, @Nullable RegistryObject<Item> creativeTabItem, IEventBus bus, RegistryClass... inits) {
 		RegUtil.MODID = modid;
+		create(ForgeRegistries.ITEMS); // Pre-Bake the Item DeferredRegister for ToolAndArmorHelper
 		if (creativeTabItem != null)
 			CREATIVE_TAB = new CreativeModeTab(RegUtil.MODID.concat(".item_group")) {
 				@Override
@@ -162,9 +163,14 @@ public class RegUtil {
 			register.register(bus);
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <R extends IForgeRegistryEntry<R>> DeferredRegister<R> create(IForgeRegistry<R> type) {
+		if (type == ForgeRegistries.ITEMS && ToolAndArmorHelper.REGISTRY != null)
+			return (DeferredRegister<R>) ToolAndArmorHelper.REGISTRY;
 		DeferredRegister<R> def = DeferredRegister.create(type, RegUtil.MODID);
 		REGISTERS.add(def);
+		if (type == ForgeRegistries.ITEMS)
+			ToolAndArmorHelper.REGISTRY = (DeferredRegister<Item>) def;
 		return def;
 	}
 
@@ -320,7 +326,7 @@ public class RegUtil {
 
 	public static class ToolAndArmorHelper {
 
-		public static DeferredRegister<Item> REGISTRY;
+		private static DeferredRegister<Item> REGISTRY;
 
 		public static boolean isBroken(ItemStack stack) {
 			return stack.isDamageableItem() && stack.getDamageValue() >= stack.getMaxDamage() - 1;
