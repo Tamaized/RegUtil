@@ -73,14 +73,16 @@ processResources {
 }
 
 jar {
+    //noinspection GroovyAssignabilityCheck
     manifest {
-        attributes(["Specification-Title"     : "RegUtil",
-                    "Specification-Vendor"    : "Tamaized",
-                    "Specification-Version"   : "${version}",
-                    "Implementation-Title"    : project.name,
-                    "Implementation-Version"  : "${version}",
-                    "Implementation-Vendor"   : "Tamaized",
-                    "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")],)
+        attributes("FMLModType" : "GAMELIBRARY",
+                    "Specification-Title" : "RegUtil",
+                    "Specification-Vendor" : "Tamaized",
+                    "Specification-Version" : "${version}",
+                    "Implementation-Title" : project.name,
+                    "Implementation-Version" : "${version}",
+                    "Implementation-Vendor" : "Tamaized",
+                    "Implementation-Timestamp" : new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"))
     }
 }
 
