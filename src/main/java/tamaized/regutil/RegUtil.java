@@ -16,10 +16,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.LazyLoadedValue;
-import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
@@ -118,14 +116,15 @@ public class RegUtil {
 		return Registry.register(Registry.STRUCTURE_PIECE, new ResourceLocation(RegUtil.MODID, name.toLowerCase(Locale.ROOT)), piece);
 	}
 
-	public static void setup(String modid, RegistryObject<Item> creativeTabItem, IEventBus bus, RegistryClass... inits) {
+	public static void setup(String modid, @Nullable RegistryObject<Item> creativeTabItem, IEventBus bus, RegistryClass... inits) {
 		RegUtil.MODID = modid;
-		CREATIVE_TAB = new CreativeModeTab(RegUtil.MODID.concat(".item_group")) {
-			@Override
-			public ItemStack makeIcon() {
-				return new ItemStack(creativeTabItem.get());
-			}
-		};
+		if (creativeTabItem != null)
+			CREATIVE_TAB = new CreativeModeTab(RegUtil.MODID.concat(".item_group")) {
+				@Override
+				public ItemStack makeIcon() {
+					return new ItemStack(creativeTabItem.get());
+				}
+			};
 		for (RegistryClass init : inits)
 			init.init(bus);
 		class FixedUpgradeRecipe extends UpgradeRecipe {
