@@ -1,0 +1,12 @@
+modLoader="javafml"
+loaderVersion="[39,)"
+issueTrackerURL="https://github.com/Tamaized/RegUtil/issues"
+[[mods]]
+modId="regutil"
+version="${version}"
+displayName="RegUtil"
+credits=""
+authors="Tamaized"
+description='''
+Registry Utility
+'''
