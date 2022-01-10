@@ -117,14 +117,14 @@ public class RegUtil {
 	}
 
 	@SafeVarargs
-	public static void setup(String modid, @Nullable RegistryObject<Item> creativeTabItem, IEventBus bus, Supplier<RegistryClass>... inits) {
+	public static void setup(String modid, @Nullable Supplier<RegistryObject<Item>> creativeTabItem, IEventBus bus, Supplier<RegistryClass>... inits) {
 		RegUtil.MODID = modid;
 		create(ForgeRegistries.ITEMS); // Pre-Bake the Item DeferredRegister for ToolAndArmorHelper
 		if (creativeTabItem != null)
 			CREATIVE_TAB = new CreativeModeTab(RegUtil.MODID.concat(".item_group")) {
 				@Override
 				public ItemStack makeIcon() {
-					return new ItemStack(creativeTabItem.get());
+					return new ItemStack(creativeTabItem.get().get());
 				}
 			};
 		for (Supplier<RegistryClass> init : inits)
