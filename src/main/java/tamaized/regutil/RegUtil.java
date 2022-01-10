@@ -116,7 +116,8 @@ public class RegUtil {
 		return Registry.register(Registry.STRUCTURE_PIECE, new ResourceLocation(RegUtil.MODID, name.toLowerCase(Locale.ROOT)), piece);
 	}
 
-	public static void setup(String modid, @Nullable RegistryObject<Item> creativeTabItem, IEventBus bus, RegistryClass... inits) {
+	@SafeVarargs
+	public static void setup(String modid, @Nullable RegistryObject<Item> creativeTabItem, IEventBus bus, Supplier<RegistryClass>... inits) {
 		RegUtil.MODID = modid;
 		create(ForgeRegistries.ITEMS); // Pre-Bake the Item DeferredRegister for ToolAndArmorHelper
 		if (creativeTabItem != null)
@@ -126,8 +127,8 @@ public class RegUtil {
 					return new ItemStack(creativeTabItem.get());
 				}
 			};
-		for (RegistryClass init : inits)
-			init.init(bus);
+		for (Supplier<RegistryClass> init : inits)
+			init.get().init(bus);
 		class FixedUpgradeRecipe extends UpgradeRecipe {
 			public FixedUpgradeRecipe(ResourceLocation p_44523_, Ingredient p_44524_, Ingredient p_44525_, ItemStack p_44526_) {
 				super(p_44523_, p_44524_, p_44525_, p_44526_);
