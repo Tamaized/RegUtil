@@ -53,7 +53,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.feature.StructurePieceType;
+import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.IItemRenderProperties;
@@ -839,9 +839,9 @@ public class RegUtil {
 				public Object getRenderPropertiesInternal() {
 					return new IItemRenderProperties() {
 						@Override
-						public <A extends HumanoidModel<?>> A getArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlot armorSlot, A _default) {
-							A tierModel = tier.getArmorModel(entityLiving, itemStack, armorSlot, _default);
-							return tierModel != null ? tierModel : (tier.fullbright || tier.overlay) ? (A) new HumanoidModel<>(Minecraft.getInstance().getEntityModels().
+						public HumanoidModel<?> getArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlot armorSlot, HumanoidModel<?> _default) {
+							HumanoidModel<?> tierModel = tier.getArmorModel(entityLiving, itemStack, armorSlot, _default);
+							return tierModel != null ? tierModel : (tier.fullbright || tier.overlay) ? new HumanoidModel<>(Minecraft.getInstance().getEntityModels().
 									bakeLayer(slot == EquipmentSlot.LEGS ? ModelLayers.PLAYER_INNER_ARMOR : ModelLayers.PLAYER_OUTER_ARMOR)) {
 								@Override
 								public void renderToBuffer(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
