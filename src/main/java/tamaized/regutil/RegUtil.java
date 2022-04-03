@@ -254,7 +254,7 @@ public class RegUtil {
 
 	public static class ArmorMaterial implements net.minecraft.world.item.ArmorMaterial { // KB Resist max = 0.25 (0.25 * 4 = 1 = 100%)
 		private static final int[] MAX_DAMAGE_ARRAY = new int[]{13, 15, 16, 11};
-		private final String name;
+		private final ResourceLocation name;
 		private final int maxDamageFactor;
 		private final int[] damageReductionAmountArray;
 		private final int enchantability;
@@ -267,7 +267,7 @@ public class RegUtil {
 		private final boolean overlayFullbright;
 
 		public ArmorMaterial(String name, int maxDamageFactor, int[] damageReductionAmountArray, int enchantability, SoundEvent soundEvent, float toughness, float knockbackResistance, Supplier<Ingredient> repairMaterial, boolean fullbright, boolean overlay, boolean overlayFullbright) {
-			this.name = new ResourceLocation(RegUtil.MODID, name).toString();
+			this.name = new ResourceLocation(RegUtil.MODID, name);
 			this.maxDamageFactor = maxDamageFactor;
 			this.damageReductionAmountArray = damageReductionAmountArray;
 			this.enchantability = enchantability;
@@ -319,7 +319,11 @@ public class RegUtil {
 
 		@Override
 		public String getName() {
-			return this.name;
+			return this.name.toString();
+		}
+
+		public RegistryObject<Item> register(DeferredRegister<Item> REGISTRY, String append, Supplier<ArmorItem> obj) {
+			return REGISTRY.register(name.getPath().toLowerCase(Locale.US).concat(append), obj);
 		}
 
 		@Override
@@ -748,7 +752,7 @@ public class RegUtil {
 		}
 
 		public static RegistryObject<Item> helmet(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
-			return wrapArmorItemRegistration(tier, REGISTRY.register(tier.getName().toLowerCase(Locale.US).concat("_helmet"), armorFactory(tier, EquipmentSlot.HEAD, properties, factory)));
+			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_helmet", armorFactory(tier, EquipmentSlot.HEAD, properties, factory)));
 		}
 
 		public static RegistryObject<Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
@@ -756,15 +760,15 @@ public class RegUtil {
 		}
 
 		public static RegistryObject<Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra) {
-			return wrapArmorItemRegistration(tier, REGISTRY.register(tier.getName().toLowerCase(Locale.US).concat("_chest"), armorFactory(tier, EquipmentSlot.CHEST, properties, factory, elytra)));
+			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_chest", armorFactory(tier, EquipmentSlot.CHEST, properties, factory, elytra)));
 		}
 
 		public static RegistryObject<Item> legs(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
-			return wrapArmorItemRegistration(tier, REGISTRY.register(tier.getName().toLowerCase(Locale.US).concat("_legs"), armorFactory(tier, EquipmentSlot.LEGS, properties, factory)));
+			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_legs", armorFactory(tier, EquipmentSlot.LEGS, properties, factory)));
 		}
 
 		public static RegistryObject<Item> boots(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
-			return wrapArmorItemRegistration(tier, REGISTRY.register(tier.getName().toLowerCase(Locale.US).concat("_boots"), armorFactory(tier, EquipmentSlot.FEET, properties, factory)));
+			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_boots", armorFactory(tier, EquipmentSlot.FEET, properties, factory)));
 		}
 
 		private static RegistryObject<Item> wrapArmorItemRegistration(ArmorMaterial tier, RegistryObject<Item> object) {
@@ -777,7 +781,6 @@ public class RegUtil {
 			return armorFactory(tier, slot, properties, factory, (stack, tick) -> false);
 		}
 
-		@SuppressWarnings("unchecked")
 		private static Supplier<ArmorItem> armorFactory(ArmorMaterial tier, EquipmentSlot slot, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra) {
 			return () -> new ArmorItem(tier, slot, properties) {
 
