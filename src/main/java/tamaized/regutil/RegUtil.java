@@ -267,7 +267,7 @@ public class RegUtil {
 		private final boolean overlayFullbright;
 
 		public ArmorMaterial(String name, int maxDamageFactor, int[] damageReductionAmountArray, int enchantability, SoundEvent soundEvent, float toughness, float knockbackResistance, Supplier<Ingredient> repairMaterial, boolean fullbright, boolean overlay, boolean overlayFullbright) {
-			this.name = name;
+			this.name = new ResourceLocation(RegUtil.MODID, name).toString();
 			this.maxDamageFactor = maxDamageFactor;
 			this.damageReductionAmountArray = damageReductionAmountArray;
 			this.enchantability = enchantability;
