@@ -14,7 +14,6 @@ import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.GsonHelper;
@@ -63,7 +62,6 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
-import net.minecraftforge.registries.IForgeRegistryEntry;
 import net.minecraftforge.registries.RegistryObject;
 
 import javax.annotation.Nullable;
@@ -173,7 +171,7 @@ public class RegUtil {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <R extends IForgeRegistryEntry<R>> DeferredRegister<R> create(IForgeRegistry<R> type) {
+	public static <R> DeferredRegister<R> create(IForgeRegistry<R> type) {
 		if (type == ForgeRegistries.ITEMS && ToolAndArmorHelper.REGISTRY != null)
 			return (DeferredRegister<R>) ToolAndArmorHelper.REGISTRY;
 		DeferredRegister<R> def = DeferredRegister.create(type, RegUtil.MODID);
@@ -352,7 +350,7 @@ public class RegUtil {
 				@OnlyIn(Dist.CLIENT)
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
-						tooltip.add(new TranslatableComponent(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
@@ -394,7 +392,7 @@ public class RegUtil {
 				@OnlyIn(Dist.CLIENT)
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
-						tooltip.add(new TranslatableComponent(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
@@ -451,7 +449,7 @@ public class RegUtil {
 				@OnlyIn(Dist.CLIENT)
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
-						tooltip.add(new TranslatableComponent(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
@@ -499,7 +497,7 @@ public class RegUtil {
 				@OnlyIn(Dist.CLIENT)
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
-						tooltip.add(new TranslatableComponent(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
@@ -559,7 +557,7 @@ public class RegUtil {
 				@OnlyIn(Dist.CLIENT)
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
-						tooltip.add(new TranslatableComponent(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
@@ -617,7 +615,7 @@ public class RegUtil {
 				@OnlyIn(Dist.CLIENT)
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
-						tooltip.add(new TranslatableComponent(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
@@ -664,7 +662,7 @@ public class RegUtil {
 				@OnlyIn(Dist.CLIENT)
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
-						tooltip.add(new TranslatableComponent(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
@@ -711,7 +709,7 @@ public class RegUtil {
 				@OnlyIn(Dist.CLIENT)
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
-						tooltip.add(new TranslatableComponent(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
@@ -802,9 +800,9 @@ public class RegUtil {
 				@OnlyIn(Dist.CLIENT)
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
-						tooltip.add(new TranslatableComponent(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
 					if (elytra.test(stack, false))
-						tooltip.add(new TranslatableComponent(RegUtil.MODID + ".tooltip.elytra").withStyle(ChatFormatting.DARK_AQUA));
+						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.elytra").withStyle(ChatFormatting.DARK_AQUA));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
