@@ -55,7 +55,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.IItemRenderProperties;
+import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.common.ToolAction;
 import net.minecraftforge.common.ToolActions;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -63,6 +63,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.RegistryObject;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -838,9 +839,9 @@ public class RegUtil {
 				@Override
 				@OnlyIn(Dist.CLIENT)
 				public Object getRenderPropertiesInternal() {
-					return new IItemRenderProperties() {
+					return new IClientItemExtensions() {
 						@Override
-						public HumanoidModel<?> getArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlot armorSlot, HumanoidModel<?> _default) {
+						public @NotNull HumanoidModel<?> getHumanoidArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlot armorSlot, HumanoidModel<?> _default) {
 							HumanoidModel<?> tierModel = tier.getArmorModel(entityLiving, itemStack, armorSlot, _default);
 							return tierModel != null ? tierModel : (tier.fullbright || tier.overlay) ? new HumanoidModel<>(Minecraft.getInstance().getEntityModels().
 									bakeLayer(slot == EquipmentSlot.LEGS ? ModelLayers.PLAYER_INNER_ARMOR : ModelLayers.PLAYER_OUTER_ARMOR)) {
@@ -848,7 +849,7 @@ public class RegUtil {
 								public void renderToBuffer(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
 									super.renderToBuffer(matrixStackIn, bufferIn, (tier.fullbright || (tier.overlayFullbright && RegUtil.renderingArmorOverlay)) ? 0xF000F0 : packedLightIn, packedOverlayIn, red, green, blue, alpha);
 								}
-							} : IItemRenderProperties.super.getArmorModel(entityLiving, itemStack, armorSlot, _default);
+							} : IClientItemExtensions.super.getHumanoidArmorModel(entityLiving, itemStack, armorSlot, _default);
 						}
 					};
 				}
