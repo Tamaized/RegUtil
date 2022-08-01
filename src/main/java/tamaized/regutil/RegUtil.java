@@ -14,6 +14,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.GsonHelper;
@@ -173,11 +174,16 @@ public class RegUtil {
 
 	@SuppressWarnings("unchecked")
 	public static <R> DeferredRegister<R> create(IForgeRegistry<R> type) {
-		if (type == ForgeRegistries.ITEMS && ToolAndArmorHelper.REGISTRY != null)
+		return create(type.getRegistryKey());
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <R> DeferredRegister<R> create(ResourceKey<Registry<R>> type) {
+		if (type.equals(ForgeRegistries.Keys.ITEMS) && ToolAndArmorHelper.REGISTRY != null)
 			return (DeferredRegister<R>) ToolAndArmorHelper.REGISTRY;
 		DeferredRegister<R> def = DeferredRegister.create(type, RegUtil.MODID);
 		REGISTERS.add(def);
-		if (type == ForgeRegistries.ITEMS)
+		if (type.equals(ForgeRegistries.Keys.ITEMS))
 			ToolAndArmorHelper.REGISTRY = (DeferredRegister<Item>) def;
 		return def;
 	}
