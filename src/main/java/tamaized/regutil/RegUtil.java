@@ -172,7 +172,6 @@ public class RegUtil {
 			register.register(bus);
 	}
 
-	@SuppressWarnings("unchecked")
 	public static <R> DeferredRegister<R> create(IForgeRegistry<R> type) {
 		return create(type.getRegistryKey());
 	}
