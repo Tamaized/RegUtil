@@ -33,7 +33,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.BowItem;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.Item;
@@ -53,7 +52,6 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
@@ -86,12 +84,6 @@ public class RegUtil {
 
 	private static String MODID = "regutil";
 
-	private static CreativeModeTab CREATIVE_TAB;
-
-	public static CreativeModeTab creativeTab() {
-		return CREATIVE_TAB;
-	}
-
 	private static final UUID[] ARMOR_MODIFIER_UUID_PER_SLOT = new UUID[]{UUID.fromString("845DB27C-C624-495F-8C9F-6020A9A58B6B"), UUID.fromString("D8499B04-0E66-4726-AB29-64469D734E0D"), UUID.fromString("9F3D476D-C118-4544-8365-64846904B48E"), UUID.fromString("2AD3F246-FEE1-4E67-B886-69FD380BB150"), UUID.fromString("86fda400-8542-4d95-b275-c6393de5b887")};
 	private static final List<DeferredRegister<?>> REGISTERS = new ArrayList<>();
 	private static final Map<Item, List<RegistryObject<Item>>> BOWS = new HashMap<>() {{
@@ -120,21 +112,10 @@ public class RegUtil {
 		return false;
 	}
 
-	public static StructurePieceType registerStructurePiece(String name, StructurePieceType.StructureTemplateType piece) {
-		return Registry.register(Registry.STRUCTURE_PIECE, new ResourceLocation(RegUtil.MODID, name.toLowerCase(Locale.ROOT)), piece);
-	}
-
 	@SafeVarargs
-	public static void setup(String modid, @Nullable Supplier<RegistryObject<Item>> creativeTabItem, IEventBus bus, Supplier<RegistryClass>... inits) {
+	public static void setup(String modid, IEventBus bus, Supplier<RegistryClass>... inits) {
 		RegUtil.MODID = modid;
 		create(ForgeRegistries.ITEMS); // Pre-Bake the Item DeferredRegister for ToolAndArmorHelper
-		if (creativeTabItem != null)
-			CREATIVE_TAB = new CreativeModeTab(RegUtil.MODID.concat(".item_group")) {
-				@Override
-				public ItemStack makeIcon() {
-					return new ItemStack(creativeTabItem.get().get());
-				}
-			};
 		for (Supplier<RegistryClass> init : inits)
 			init.get().init(bus);
 		class FixedUpgradeRecipe extends UpgradeRecipe {
