@@ -12,6 +12,7 @@
 !/libs/**
 !.gitignore
 !build.gradle
+!settings.gradle
 !gradle.properties
 !discord.properties
 !LICENSE
