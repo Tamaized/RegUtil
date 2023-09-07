@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -47,7 +48,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.ShapedRecipe;
-import net.minecraft.world.item.crafting.UpgradeRecipe;
+import net.minecraft.world.item.crafting.SmithingTransformRecipe;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
@@ -118,36 +119,40 @@ public class RegUtil {
 		create(ForgeRegistries.ITEMS); // Pre-Bake the Item DeferredRegister for ToolAndArmorHelper
 		for (Supplier<RegistryClass> init : inits)
 			init.get().init(bus);
-		class FixedUpgradeRecipe extends UpgradeRecipe {
-			public FixedUpgradeRecipe(ResourceLocation p_44523_, Ingredient p_44524_, Ingredient p_44525_, ItemStack p_44526_) {
-				super(p_44523_, p_44524_, p_44525_, p_44526_);
+		class FixedUpgradeRecipe extends SmithingTransformRecipe {
+			public FixedUpgradeRecipe(ResourceLocation pId, Ingredient pTemplate, Ingredient pBase, Ingredient pAddition, ItemStack pResult) {
+				super(pId, pTemplate, pBase, pAddition, pResult);
 			}
 
 			@Override
-			public ItemStack assemble(Container p_44531_) {
-				ItemStack itemstack = getResultItem().copy();
-				CompoundTag compoundtag = p_44531_.getItem(0).getTag();
+			public ItemStack assemble(Container pContainer, RegistryAccess pRegistryAccess) {
+				ItemStack itemstack = getResultItem(pRegistryAccess).copy();
+				CompoundTag compoundtag = pContainer.getItem(0).getTag();
 				if (compoundtag != null)
 					itemstack.getOrCreateTag().merge(compoundtag.copy());
 				return itemstack;
 			}
 		}
-		create(ForgeRegistries.RECIPE_SERIALIZERS).register("smithing", () -> new UpgradeRecipe.Serializer() {
+		create(ForgeRegistries.RECIPE_SERIALIZERS).register("smithing", () -> new SmithingTransformRecipe.Serializer() {
+
 			@Override
-			public UpgradeRecipe fromJson(ResourceLocation p_44562_, JsonObject p_44563_) {
-				Ingredient ingredient = Ingredient.fromJson(GsonHelper.getAsJsonObject(p_44563_, "base"));
-				Ingredient ingredient1 = Ingredient.fromJson(GsonHelper.getAsJsonObject(p_44563_, "addition"));
-				ItemStack itemstack = ShapedRecipe.itemStackFromJson(GsonHelper.getAsJsonObject(p_44563_, "result"));
-				return new FixedUpgradeRecipe(p_44562_, ingredient, ingredient1, itemstack);
+			public SmithingTransformRecipe fromJson(ResourceLocation p_266953_, JsonObject p_266720_) {
+				Ingredient ingredient = Ingredient.fromJson(GsonHelper.getNonNull(p_266720_, "template"));
+				Ingredient ingredient1 = Ingredient.fromJson(GsonHelper.getNonNull(p_266720_, "base"));
+				Ingredient ingredient2 = Ingredient.fromJson(GsonHelper.getNonNull(p_266720_, "addition"));
+				ItemStack itemstack = ShapedRecipe.itemStackFromJson(GsonHelper.getAsJsonObject(p_266720_, "result"));
+				return new FixedUpgradeRecipe(p_266953_, ingredient, ingredient1, ingredient2, itemstack);
 			}
 
 			@Override
-			public UpgradeRecipe fromNetwork(ResourceLocation p_44565_, FriendlyByteBuf p_44566_) {
-				Ingredient ingredient = Ingredient.fromNetwork(p_44566_);
-				Ingredient ingredient1 = Ingredient.fromNetwork(p_44566_);
-				ItemStack itemstack = p_44566_.readItem();
-				return new FixedUpgradeRecipe(p_44565_, ingredient, ingredient1, itemstack);
+			public SmithingTransformRecipe fromNetwork(ResourceLocation p_267117_, FriendlyByteBuf p_267316_) {
+				Ingredient ingredient = Ingredient.fromNetwork(p_267316_);
+				Ingredient ingredient1 = Ingredient.fromNetwork(p_267316_);
+				Ingredient ingredient2 = Ingredient.fromNetwork(p_267316_);
+				ItemStack itemstack = p_267316_.readItem();
+				return new FixedUpgradeRecipe(p_267117_, ingredient, ingredient1, ingredient2, itemstack);
 			}
+
 		});
 		for (DeferredRegister<?> register : REGISTERS)
 			register.register(bus);
@@ -278,13 +283,13 @@ public class RegUtil {
 		}
 
 		@Override
-		public int getDurabilityForSlot(EquipmentSlot slotIn) {
-			return MAX_DAMAGE_ARRAY[slotIn.getIndex()] * this.maxDamageFactor;
+		public int getDurabilityForType(ArmorItem.Type pType) {
+			return MAX_DAMAGE_ARRAY[pType.getSlot().getIndex()] * this.maxDamageFactor;
 		}
 
 		@Override
-		public int getDefenseForSlot(EquipmentSlot slotIn) {
-			return this.damageReductionAmountArray[slotIn.getIndex()];
+		public int getDefenseForType(ArmorItem.Type pType) {
+			return this.damageReductionAmountArray[pType.getSlot().getIndex()];
 		}
 
 		@Override
@@ -737,7 +742,7 @@ public class RegUtil {
 		}
 
 		public static RegistryObject<Item> helmet(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
-			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_helmet", armorFactory(tier, EquipmentSlot.HEAD, properties, factory)));
+			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_helmet", armorFactory(tier, ArmorItem.Type.HELMET, properties, factory)));
 		}
 
 		public static RegistryObject<Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
@@ -745,15 +750,15 @@ public class RegUtil {
 		}
 
 		public static RegistryObject<Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra) {
-			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_chest", armorFactory(tier, EquipmentSlot.CHEST, properties, factory, elytra)));
+			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_chest", armorFactory(tier, ArmorItem.Type.CHESTPLATE, properties, factory, elytra)));
 		}
 
 		public static RegistryObject<Item> legs(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
-			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_legs", armorFactory(tier, EquipmentSlot.LEGS, properties, factory)));
+			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_legs", armorFactory(tier, ArmorItem.Type.LEGGINGS, properties, factory)));
 		}
 
 		public static RegistryObject<Item> boots(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
-			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_boots", armorFactory(tier, EquipmentSlot.FEET, properties, factory)));
+			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_boots", armorFactory(tier, ArmorItem.Type.BOOTS, properties, factory)));
 		}
 
 		private static RegistryObject<Item> wrapArmorItemRegistration(ArmorMaterial tier, RegistryObject<Item> object) {
@@ -762,17 +767,17 @@ public class RegUtil {
 			return object;
 		}
 
-		private static Supplier<ArmorItem> armorFactory(ArmorMaterial tier, EquipmentSlot slot, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		private static Supplier<ArmorItem> armorFactory(ArmorMaterial tier, ArmorItem.Type slot, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
 			return armorFactory(tier, slot, properties, factory, (stack, tick) -> false);
 		}
 
-		private static Supplier<ArmorItem> armorFactory(ArmorMaterial tier, EquipmentSlot slot, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra) {
+		private static Supplier<ArmorItem> armorFactory(ArmorMaterial tier, ArmorItem.Type slot, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra) {
 			return () -> new ArmorItem(tier, slot, properties) {
 
 				@Override
 				public boolean elytraFlightTick(ItemStack stack, LivingEntity entity, int flightTicks) {
 					boolean flag = !isBroken(stack) && (elytra.test(stack, true) || super.elytraFlightTick(stack, entity, flightTicks));
-					if (flag && !entity.level.isClientSide && (flightTicks + 1) % 20 == 0) {
+					if (flag && !entity.level().isClientSide && (flightTicks + 1) % 20 == 0) {
 						stack.hurtAndBreak(1, entity, e -> e.broadcastBreakEvent(EquipmentSlot.CHEST));
 					}
 					return flag;
@@ -816,7 +821,7 @@ public class RegUtil {
 					ImmutableMultimap.Builder<Attribute, AttributeModifier> map = ImmutableMultimap.builder();
 					if (!isBroken(stack)) {
 						map.putAll(super.getDefaultAttributeModifiers(equipmentSlot));
-						if (equipmentSlot == slot)
+						if (equipmentSlot == slot.getSlot())
 							map.putAll(factory.apply(equipmentSlot.getIndex()));
 					}
 					return map.build();
@@ -830,7 +835,7 @@ public class RegUtil {
 						public @NotNull HumanoidModel<?> getHumanoidArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlot armorSlot, HumanoidModel<?> _default) {
 							HumanoidModel<?> tierModel = tier.getArmorModel(entityLiving, itemStack, armorSlot, _default);
 							return tierModel != null ? tierModel : (tier.fullbright || tier.overlay) ? new HumanoidModel<>(Minecraft.getInstance().getEntityModels().
-									bakeLayer(slot == EquipmentSlot.LEGS ? ModelLayers.PLAYER_INNER_ARMOR : ModelLayers.PLAYER_OUTER_ARMOR)) {
+									bakeLayer(slot == Type.LEGGINGS ? ModelLayers.PLAYER_INNER_ARMOR : ModelLayers.PLAYER_OUTER_ARMOR)) {
 								@Override
 								public void renderToBuffer(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
 									super.renderToBuffer(matrixStackIn, bufferIn, (tier.fullbright || (tier.overlayFullbright && RegUtil.renderingArmorOverlay)) ? 0xF000F0 : packedLightIn, packedOverlayIn, red, green, blue, alpha);
