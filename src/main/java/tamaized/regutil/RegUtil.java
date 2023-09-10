@@ -127,7 +127,7 @@ public class RegUtil {
 			@Override
 			public ItemStack assemble(Container pContainer, RegistryAccess pRegistryAccess) {
 				ItemStack itemstack = getResultItem(pRegistryAccess).copy();
-				CompoundTag compoundtag = pContainer.getItem(0).getTag();
+				CompoundTag compoundtag = pContainer.getItem(1).getTag();
 				if (compoundtag != null)
 					itemstack.getOrCreateTag().merge(compoundtag.copy());
 				return itemstack;
