@@ -99,7 +99,7 @@ public class RegUtil {
 		if (list == null)
 			return false;
 		for (RegistryObject<Item> o : list) {
-			if (stack.is(o.get()))
+			if (o.isPresent() && stack.is(o.get()))
 				return true;
 		}
 		return false;
@@ -107,7 +107,7 @@ public class RegUtil {
 
 	public static boolean isArmorOverlay(ItemStack stack) {
 		for (RegistryObject<Item> o : ARMOR_OVERLAYS) {
-			if (stack.is(o.get()))
+			if (o.isPresent() && stack.is(o.get()))
 				return true;
 		}
 		return false;
