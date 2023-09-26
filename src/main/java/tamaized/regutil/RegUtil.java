@@ -328,14 +328,18 @@ public class RegUtil {
 	}
 
 	public static class ToolAndArmorHelper {
-
+		
 		private static DeferredRegister<Item> REGISTRY;
+		
+		public record TooltipContext(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+			
+		}
 
 		public static boolean isBroken(ItemStack stack) {
 			return stack.isDamageableItem() && stack.getDamageValue() >= stack.getMaxDamage() - 1;
 		}
 
-		public static RegistryObject<Item> sword(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> sword(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_sword"), () -> new SwordItem(tier, 3, -2.4F, properties) {
 
 				@Override
@@ -343,6 +347,7 @@ public class RegUtil {
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
 						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+					tooltipConsumer.accept(new TooltipContext(stack, worldIn, tooltip, flagIn));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
@@ -377,7 +382,7 @@ public class RegUtil {
 			});
 		}
 
-		public static RegistryObject<Item> shield(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> shield(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_shield"), () -> new ShieldItem(properties.defaultDurability(tier.getUses())) {
 
 				@Override
@@ -385,6 +390,7 @@ public class RegUtil {
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
 						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+					tooltipConsumer.accept(new TooltipContext(stack, worldIn, tooltip, flagIn));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
@@ -434,7 +440,7 @@ public class RegUtil {
 			return o;
 		}
 
-		public static RegistryObject<Item> bow(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> bow(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return registerBow(Items.BOW, REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_bow"), () -> new BowItem(properties.defaultDurability(tier.getUses())) {
 
 				@Override
@@ -442,6 +448,7 @@ public class RegUtil {
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
 						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+					tooltipConsumer.accept(new TooltipContext(stack, worldIn, tooltip, flagIn));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
@@ -482,7 +489,7 @@ public class RegUtil {
 			}));
 		}
 
-		public static RegistryObject<Item> xbow(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> xbow(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return registerBow(Items.CROSSBOW, REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_xbow"), () -> new CrossbowItem(properties.defaultDurability(tier.getUses())) {
 
 				@Override
@@ -490,6 +497,7 @@ public class RegUtil {
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
 						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+					tooltipConsumer.accept(new TooltipContext(stack, worldIn, tooltip, flagIn));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
@@ -542,7 +550,7 @@ public class RegUtil {
 			}));
 		}
 
-		public static RegistryObject<Item> axe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> axe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_axe"), () -> new LootingAxe(tier, 5F, -3.0F, properties) {
 
 				@Override
@@ -550,6 +558,7 @@ public class RegUtil {
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
 						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+					tooltipConsumer.accept(new TooltipContext(stack, worldIn, tooltip, flagIn));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
@@ -600,7 +609,7 @@ public class RegUtil {
 			});
 		}
 
-		public static RegistryObject<Item> pickaxe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> pickaxe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_pickaxe"), () -> new PickaxeItem(tier, 1, -2.8F, properties) {
 
 				@Override
@@ -608,6 +617,7 @@ public class RegUtil {
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
 						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+					tooltipConsumer.accept(new TooltipContext(stack, worldIn, tooltip, flagIn));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
@@ -647,7 +657,7 @@ public class RegUtil {
 			});
 		}
 
-		public static RegistryObject<Item> shovel(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> shovel(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_shovel"), () -> new ShovelItem(tier, 1.5F, -3.0F, properties) {
 
 				@Override
@@ -655,6 +665,7 @@ public class RegUtil {
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
 						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+					tooltipConsumer.accept(new TooltipContext(stack, worldIn, tooltip, flagIn));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
@@ -694,7 +705,7 @@ public class RegUtil {
 			});
 		}
 
-		public static RegistryObject<Item> hoe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
+		public static RegistryObject<Item> hoe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_hoe"), () -> new HoeItem(tier, -3, 0.0F, properties) {
 
 				@Override
@@ -702,6 +713,7 @@ public class RegUtil {
 				public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 					if (isBroken(stack))
 						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+					tooltipConsumer.accept(new TooltipContext(stack, worldIn, tooltip, flagIn));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
@@ -741,24 +753,24 @@ public class RegUtil {
 			});
 		}
 
-		public static RegistryObject<Item> helmet(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
-			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_helmet", armorFactory(tier, ArmorItem.Type.HELMET, properties, factory)));
+		public static RegistryObject<Item> helmet(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_helmet", armorFactory(tier, ArmorItem.Type.HELMET, properties, factory, tooltipConsumer)));
 		}
 
-		public static RegistryObject<Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
-			return chest(tier, properties, factory, (stack, tick) -> false);
+		public static RegistryObject<Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+			return chest(tier, properties, factory, (stack, tick) -> false, tooltipConsumer);
 		}
 
-		public static RegistryObject<Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra) {
-			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_chest", armorFactory(tier, ArmorItem.Type.CHESTPLATE, properties, factory, elytra)));
+		public static RegistryObject<Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<TooltipContext> tooltipConsumer) {
+			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_chest", armorFactory(tier, ArmorItem.Type.CHESTPLATE, properties, factory, elytra, tooltipConsumer)));
 		}
 
-		public static RegistryObject<Item> legs(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
-			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_legs", armorFactory(tier, ArmorItem.Type.LEGGINGS, properties, factory)));
+		public static RegistryObject<Item> legs(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_legs", armorFactory(tier, ArmorItem.Type.LEGGINGS, properties, factory, tooltipConsumer)));
 		}
 
-		public static RegistryObject<Item> boots(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
-			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_boots", armorFactory(tier, ArmorItem.Type.BOOTS, properties, factory)));
+		public static RegistryObject<Item> boots(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_boots", armorFactory(tier, ArmorItem.Type.BOOTS, properties, factory, tooltipConsumer)));
 		}
 
 		private static RegistryObject<Item> wrapArmorItemRegistration(ArmorMaterial tier, RegistryObject<Item> object) {
@@ -767,11 +779,11 @@ public class RegUtil {
 			return object;
 		}
 
-		private static Supplier<ArmorItem> armorFactory(ArmorMaterial tier, ArmorItem.Type slot, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory) {
-			return armorFactory(tier, slot, properties, factory, (stack, tick) -> false);
+		private static Supplier<ArmorItem> armorFactory(ArmorMaterial tier, ArmorItem.Type slot, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+			return armorFactory(tier, slot, properties, factory, (stack, tick) -> false, tooltipConsumer);
 		}
 
-		private static Supplier<ArmorItem> armorFactory(ArmorMaterial tier, ArmorItem.Type slot, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra) {
+		private static Supplier<ArmorItem> armorFactory(ArmorMaterial tier, ArmorItem.Type slot, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<TooltipContext> tooltipConsumer) {
 			return () -> new ArmorItem(tier, slot, properties) {
 
 				@Override
@@ -795,6 +807,7 @@ public class RegUtil {
 						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
 					if (elytra.test(stack, false))
 						tooltip.add(Component.translatable(RegUtil.MODID + ".tooltip.elytra").withStyle(ChatFormatting.DARK_AQUA));
+					tooltipConsumer.accept(new TooltipContext(stack, worldIn, tooltip, flagIn));
 					super.appendHoverText(stack, worldIn, tooltip, flagIn);
 				}
 
