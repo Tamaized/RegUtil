@@ -1,6 +1,6 @@
 package tamaized.regutil;
 
-import net.minecraftforge.eventbus.api.IEventBus;
+import net.neoforged.bus.api.IEventBus;
 
 public interface RegistryClass {
 

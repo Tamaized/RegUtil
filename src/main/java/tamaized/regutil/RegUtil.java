@@ -6,6 +6,8 @@ import com.google.common.collect.Sets;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
@@ -46,6 +48,7 @@ import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tier;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.item.crafting.CraftingRecipeCodecs;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.item.crafting.SmithingTransformRecipe;
@@ -53,16 +56,16 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.extensions.common.IClientItemExtensions;
-import net.minecraftforge.common.ToolAction;
-import net.minecraftforge.common.ToolActions;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.IForgeRegistry;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
+import net.neoforged.neoforge.common.ToolAction;
+import net.neoforged.neoforge.common.ToolActions;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.registries.IForgeRegistry;
+import net.neoforged.neoforge.registries.RegistryObject;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -120,8 +123,16 @@ public class RegUtil {
 		for (Supplier<RegistryClass> init : inits)
 			init.get().init(bus);
 		class FixedUpgradeRecipe extends SmithingTransformRecipe {
-			public FixedUpgradeRecipe(ResourceLocation pId, Ingredient pTemplate, Ingredient pBase, Ingredient pAddition, ItemStack pResult) {
-				super(pId, pTemplate, pBase, pAddition, pResult);
+			final Ingredient template;
+			final Ingredient base;
+			final Ingredient addition;
+			final ItemStack result;
+			public FixedUpgradeRecipe(Ingredient pTemplate, Ingredient pBase, Ingredient pAddition, ItemStack pResult) {
+				super(pTemplate, pBase, pAddition, pResult);
+				template = pTemplate;
+				base = pBase;
+				addition = pAddition;
+				result = pResult;
 			}
 
 			@Override
@@ -134,23 +145,28 @@ public class RegUtil {
 			}
 		}
 		create(ForgeRegistries.RECIPE_SERIALIZERS).register("smithing", () -> new SmithingTransformRecipe.Serializer() {
+			private static final Codec<SmithingTransformRecipe> CODEC = RecordCodecBuilder.create(
+					p_301062_ -> p_301062_.group(
+									Ingredient.CODEC.fieldOf("template").forGetter(p_301310_ -> ((FixedUpgradeRecipe) p_301310_).template),
+									Ingredient.CODEC.fieldOf("base").forGetter(p_300938_ -> ((FixedUpgradeRecipe) p_300938_).base),
+									Ingredient.CODEC.fieldOf("addition").forGetter(p_301153_ -> ((FixedUpgradeRecipe) p_301153_).addition),
+									CraftingRecipeCodecs.ITEMSTACK_OBJECT_CODEC.fieldOf("result").forGetter(p_300935_ -> ((FixedUpgradeRecipe) p_300935_).result)
+							)
+							.apply(p_301062_, (template, base, addition, result) -> (SmithingTransformRecipe) new FixedUpgradeRecipe(template, base, addition, result))
+			);
 
 			@Override
-			public SmithingTransformRecipe fromJson(ResourceLocation p_266953_, JsonObject p_266720_) {
-				Ingredient ingredient = Ingredient.fromJson(GsonHelper.getNonNull(p_266720_, "template"));
-				Ingredient ingredient1 = Ingredient.fromJson(GsonHelper.getNonNull(p_266720_, "base"));
-				Ingredient ingredient2 = Ingredient.fromJson(GsonHelper.getNonNull(p_266720_, "addition"));
-				ItemStack itemstack = ShapedRecipe.itemStackFromJson(GsonHelper.getAsJsonObject(p_266720_, "result"));
-				return new FixedUpgradeRecipe(p_266953_, ingredient, ingredient1, ingredient2, itemstack);
+			public Codec<SmithingTransformRecipe> codec() {
+				return CODEC;
 			}
 
 			@Override
-			public SmithingTransformRecipe fromNetwork(ResourceLocation p_267117_, FriendlyByteBuf p_267316_) {
+			public SmithingTransformRecipe fromNetwork(FriendlyByteBuf p_267316_) {
 				Ingredient ingredient = Ingredient.fromNetwork(p_267316_);
 				Ingredient ingredient1 = Ingredient.fromNetwork(p_267316_);
 				Ingredient ingredient2 = Ingredient.fromNetwork(p_267316_);
 				ItemStack itemstack = p_267316_.readItem();
-				return new FixedUpgradeRecipe(p_267117_, ingredient, ingredient1, ingredient2, itemstack);
+				return new FixedUpgradeRecipe(ingredient, ingredient1, ingredient2, itemstack);
 			}
 
 		});
