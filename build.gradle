@@ -105,8 +105,6 @@ dependencies {
 //    runtimeOnly fg.deobf("mezz.jei:${project.jei_version}")
 }
 
-jar.finalizedBy('reobfJar')
-
 def mavenUser = hasProperty("CIMUser") ? CIMUser : secrets.getProperty("maven_username")
 def mavenToken = hasProperty("CIMToken") ? CIMToken : secrets.getProperty("maven_password")
 
