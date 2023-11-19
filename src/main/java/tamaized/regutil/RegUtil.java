@@ -3,7 +3,6 @@ package tamaized.regutil;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.serialization.Codec;
@@ -14,13 +13,13 @@ import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.util.GsonHelper;
 import net.minecraft.util.LazyLoadedValue;
 import net.minecraft.world.Container;
 import net.minecraft.world.Containers;
@@ -50,7 +49,6 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.crafting.CraftingRecipeCodecs;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.item.crafting.SmithingTransformRecipe;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -62,10 +60,8 @@ import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import net.neoforged.neoforge.common.ToolAction;
 import net.neoforged.neoforge.common.ToolActions;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.ForgeRegistries;
-import net.neoforged.neoforge.registries.IForgeRegistry;
-import net.neoforged.neoforge.registries.RegistryObject;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -83,34 +79,34 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "DuplicatedCode", "deprecation"})
 public class RegUtil {
 
 	private static String MODID = "regutil";
 
 	private static final UUID[] ARMOR_MODIFIER_UUID_PER_SLOT = new UUID[]{UUID.fromString("845DB27C-C624-495F-8C9F-6020A9A58B6B"), UUID.fromString("D8499B04-0E66-4726-AB29-64469D734E0D"), UUID.fromString("9F3D476D-C118-4544-8365-64846904B48E"), UUID.fromString("2AD3F246-FEE1-4E67-B886-69FD380BB150"), UUID.fromString("86fda400-8542-4d95-b275-c6393de5b887")};
 	private static final List<DeferredRegister<?>> REGISTERS = new ArrayList<>();
-	private static final Map<Item, List<RegistryObject<Item>>> BOWS = new HashMap<>() {{
+	private static final Map<Item, List<DeferredHolder<Item, Item>>> BOWS = new HashMap<>() {{
 		put(Items.BOW, new ArrayList<>());
 		put(Items.CROSSBOW, new ArrayList<>());
 	}};
-	private static final List<RegistryObject<Item>> ARMOR_OVERLAYS = new ArrayList<>();
+	private static final List<DeferredHolder<Item, Item>> ARMOR_OVERLAYS = new ArrayList<>();
 	public static boolean renderingArmorOverlay = false;
 
 	public static boolean isMyBow(ItemStack stack, Item check) {
-		List<RegistryObject<Item>> list = BOWS.get(check);
+		List<DeferredHolder<Item, Item>> list = BOWS.get(check);
 		if (list == null)
 			return false;
-		for (RegistryObject<Item> o : list) {
-			if (o.isPresent() && stack.is(o.get()))
+		for (DeferredHolder<Item, Item> o : list) {
+			if (o.isBound() && stack.is(o.get()))
 				return true;
 		}
 		return false;
 	}
 
 	public static boolean isArmorOverlay(ItemStack stack) {
-		for (RegistryObject<Item> o : ARMOR_OVERLAYS) {
-			if (o.isPresent() && stack.is(o.get()))
+		for (DeferredHolder<Item, Item> o : ARMOR_OVERLAYS) {
+			if (o.isBound() && stack.is(o.get()))
 				return true;
 		}
 		return false;
@@ -119,7 +115,7 @@ public class RegUtil {
 	@SafeVarargs
 	public static void setup(String modid, IEventBus bus, Supplier<RegistryClass>... inits) {
 		RegUtil.MODID = modid;
-		create(ForgeRegistries.ITEMS); // Pre-Bake the Item DeferredRegister for ToolAndArmorHelper
+		create(Registries.ITEM); // Pre-Bake the Item DeferredRegister for ToolAndArmorHelper
 		for (Supplier<RegistryClass> init : inits)
 			init.get().init(bus);
 		class FixedUpgradeRecipe extends SmithingTransformRecipe {
@@ -144,7 +140,7 @@ public class RegUtil {
 				return itemstack;
 			}
 		}
-		create(ForgeRegistries.RECIPE_SERIALIZERS).register("smithing", () -> new SmithingTransformRecipe.Serializer() {
+		create(Registries.RECIPE_SERIALIZER).register("smithing", () -> new SmithingTransformRecipe.Serializer() {
 			private static final Codec<SmithingTransformRecipe> CODEC = RecordCodecBuilder.create(
 					p_301062_ -> p_301062_.group(
 									Ingredient.CODEC.fieldOf("template").forGetter(p_301310_ -> ((FixedUpgradeRecipe) p_301310_).template),
@@ -174,17 +170,13 @@ public class RegUtil {
 			register.register(bus);
 	}
 
-	public static <R> DeferredRegister<R> create(IForgeRegistry<R> type) {
-		return create(type.getRegistryKey());
-	}
-
 	@SuppressWarnings("unchecked")
 	public static <R> DeferredRegister<R> create(ResourceKey<Registry<R>> type) {
-		if (type.equals(ForgeRegistries.Keys.ITEMS) && ToolAndArmorHelper.REGISTRY != null)
+		if (type.equals(Registries.ITEM) && ToolAndArmorHelper.REGISTRY != null)
 			return (DeferredRegister<R>) ToolAndArmorHelper.REGISTRY;
 		DeferredRegister<R> def = DeferredRegister.create(type, RegUtil.MODID);
 		REGISTERS.add(def);
-		if (type.equals(ForgeRegistries.Keys.ITEMS))
+		if (type.equals(Registries.ITEM))
 			ToolAndArmorHelper.REGISTRY = (DeferredRegister<Item>) def;
 		return def;
 	}
@@ -328,7 +320,7 @@ public class RegUtil {
 			return this.name.toString();
 		}
 
-		public RegistryObject<Item> register(DeferredRegister<Item> REGISTRY, String append, Supplier<ArmorItem> obj) {
+		public DeferredHolder<Item, Item> register(DeferredRegister<Item> REGISTRY, String append, Supplier<ArmorItem> obj) {
 			return REGISTRY.register(name.getPath().toLowerCase(Locale.US).concat(append), obj);
 		}
 
@@ -355,7 +347,7 @@ public class RegUtil {
 			return stack.isDamageableItem() && stack.getDamageValue() >= stack.getMaxDamage() - 1;
 		}
 
-		public static RegistryObject<Item> sword(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static Supplier<Item> sword(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_sword"), () -> new SwordItem(tier, 3, -2.4F, properties) {
 
 				@Override
@@ -398,7 +390,7 @@ public class RegUtil {
 			});
 		}
 
-		public static RegistryObject<Item> shield(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static Supplier<Item> shield(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_shield"), () -> new ShieldItem(properties.defaultDurability(tier.getUses())) {
 
 				@Override
@@ -450,13 +442,13 @@ public class RegUtil {
 			});
 		}
 
-		private static RegistryObject<Item> registerBow(Item item, RegistryObject<Item> o) {
+		private static Supplier<Item> registerBow(Item item, DeferredHolder<Item, Item> o) {
 			if (BOWS.containsKey(item))
 				BOWS.get(item).add(o);
 			return o;
 		}
 
-		public static RegistryObject<Item> bow(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static Supplier<Item> bow(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return registerBow(Items.BOW, REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_bow"), () -> new BowItem(properties.defaultDurability(tier.getUses())) {
 
 				@Override
@@ -505,7 +497,7 @@ public class RegUtil {
 			}));
 		}
 
-		public static RegistryObject<Item> xbow(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static Supplier<Item> xbow(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return registerBow(Items.CROSSBOW, REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_xbow"), () -> new CrossbowItem(properties.defaultDurability(tier.getUses())) {
 
 				@Override
@@ -566,7 +558,7 @@ public class RegUtil {
 			}));
 		}
 
-		public static RegistryObject<Item> axe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static Supplier<Item> axe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_axe"), () -> new LootingAxe(tier, 5F, -3.0F, properties) {
 
 				@Override
@@ -625,7 +617,7 @@ public class RegUtil {
 			});
 		}
 
-		public static RegistryObject<Item> pickaxe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static Supplier<Item> pickaxe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_pickaxe"), () -> new PickaxeItem(tier, 1, -2.8F, properties) {
 
 				@Override
@@ -673,7 +665,7 @@ public class RegUtil {
 			});
 		}
 
-		public static RegistryObject<Item> shovel(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static Supplier<Item> shovel(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_shovel"), () -> new ShovelItem(tier, 1.5F, -3.0F, properties) {
 
 				@Override
@@ -721,7 +713,7 @@ public class RegUtil {
 			});
 		}
 
-		public static RegistryObject<Item> hoe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static Supplier<Item> hoe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_hoe"), () -> new HoeItem(tier, -3, 0.0F, properties) {
 
 				@Override
@@ -769,27 +761,27 @@ public class RegUtil {
 			});
 		}
 
-		public static RegistryObject<Item> helmet(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static Supplier<Item> helmet(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_helmet", armorFactory(tier, ArmorItem.Type.HELMET, properties, factory, tooltipConsumer)));
 		}
 
-		public static RegistryObject<Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static Supplier<Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return chest(tier, properties, factory, (stack, tick) -> false, tooltipConsumer);
 		}
 
-		public static RegistryObject<Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<TooltipContext> tooltipConsumer) {
+		public static Supplier<Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<TooltipContext> tooltipConsumer) {
 			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_chest", armorFactory(tier, ArmorItem.Type.CHESTPLATE, properties, factory, elytra, tooltipConsumer)));
 		}
 
-		public static RegistryObject<Item> legs(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static Supplier<Item> legs(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_legs", armorFactory(tier, ArmorItem.Type.LEGGINGS, properties, factory, tooltipConsumer)));
 		}
 
-		public static RegistryObject<Item> boots(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static Supplier<Item> boots(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_boots", armorFactory(tier, ArmorItem.Type.BOOTS, properties, factory, tooltipConsumer)));
 		}
 
-		private static RegistryObject<Item> wrapArmorItemRegistration(ArmorMaterial tier, RegistryObject<Item> object) {
+		private static Supplier<Item> wrapArmorItemRegistration(ArmorMaterial tier, DeferredHolder<Item, Item> object) {
 			if (tier.overlay)
 				ARMOR_OVERLAYS.add(object);
 			return object;
