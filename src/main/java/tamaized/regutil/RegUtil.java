@@ -71,10 +71,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.BiPredicate;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -180,12 +177,14 @@ public class RegUtil {
 		return def;
 	}
 
-	public static Function<Integer, Multimap<Attribute, AttributeModifier>> makeAttributeFactory(AttributeData... data) {
-		return (slot) -> {
+	public static BiFunction<Integer, ItemStack, Multimap<Attribute, AttributeModifier>> makeAttributeFactory(AttributeData... data) {
+		return (slot, stack) -> {
 			ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
 			for (AttributeData attribute : data) {
-				ModAttribute a = attribute.attribute.get();
-				builder.put(a, new AttributeModifier(slot == null ? a.id : ARMOR_MODIFIER_UUID_PER_SLOT[slot], a.type, attribute.value, attribute.op));
+				if (attribute.test.test(stack)) {
+					ModAttribute a = attribute.attribute.get();
+					builder.put(a, new AttributeModifier(slot == null ? a.id : ARMOR_MODIFIER_UUID_PER_SLOT[slot], a.type, attribute.value, attribute.op));
+				}
 			}
 			return builder.build();
 		};
@@ -346,7 +345,7 @@ public class RegUtil {
 			return stack.isDamageableItem() && stack.getDamageValue() >= stack.getMaxDamage() - 1;
 		}
 
-		public static DeferredHolder<Item, Item> sword(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> sword(ItemTier tier, Item.Properties properties, BiFunction<Integer, ItemStack, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_sword"), () -> new SwordItem(tier, 3, -2.4F, properties) {
 
 				@Override
@@ -382,14 +381,14 @@ public class RegUtil {
 					if (!isBroken(stack)) {
 						map.putAll(super.getDefaultAttributeModifiers(slot));
 						if (slot == EquipmentSlot.MAINHAND)
-							map.putAll(factory.apply(null));
+							map.putAll(factory.apply(null, stack));
 					}
 					return map.build();
 				}
 			});
 		}
 
-		public static DeferredHolder<Item, Item> shield(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> shield(ItemTier tier, Item.Properties properties, BiFunction<Integer, ItemStack, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_shield"), () -> new ShieldItem(properties.defaultDurability(tier.getUses())) {
 
 				@Override
@@ -434,7 +433,7 @@ public class RegUtil {
 					if (!isBroken(stack)) {
 						map.putAll(super.getAttributeModifiers(slot, stack));
 						if (slot == EquipmentSlot.OFFHAND)
-							map.putAll(factory.apply(4));
+							map.putAll(factory.apply(4, stack));
 					}
 					return map.build();
 				}
@@ -447,7 +446,7 @@ public class RegUtil {
 			return o;
 		}
 
-		public static DeferredHolder<Item, Item> bow(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> bow(ItemTier tier, Item.Properties properties, BiFunction<Integer, ItemStack, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return registerBow(Items.BOW, REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_bow"), () -> new BowItem(properties.defaultDurability(tier.getUses())) {
 
 				@Override
@@ -489,14 +488,14 @@ public class RegUtil {
 					if (!isBroken(stack)) {
 						map.putAll(super.getAttributeModifiers(slot, stack));
 						if (slot == EquipmentSlot.MAINHAND)
-							map.putAll(factory.apply(null));
+							map.putAll(factory.apply(null, stack));
 					}
 					return map.build();
 				}
 			}));
 		}
 
-		public static DeferredHolder<Item, Item> xbow(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> xbow(ItemTier tier, Item.Properties properties, BiFunction<Integer, ItemStack, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return registerBow(Items.CROSSBOW, REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_xbow"), () -> new CrossbowItem(properties.defaultDurability(tier.getUses())) {
 
 				@Override
@@ -550,14 +549,14 @@ public class RegUtil {
 					if (!isBroken(stack)) {
 						map.putAll(super.getAttributeModifiers(slot, stack));
 						if (slot == EquipmentSlot.MAINHAND)
-							map.putAll(factory.apply(null));
+							map.putAll(factory.apply(null, stack));
 					}
 					return map.build();
 				}
 			}));
 		}
 
-		public static DeferredHolder<Item, Item> axe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> axe(ItemTier tier, Item.Properties properties, BiFunction<Integer, ItemStack, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_axe"), () -> new LootingAxe(tier, 5F, -3.0F, properties) {
 
 				@Override
@@ -609,14 +608,14 @@ public class RegUtil {
 					if (!isBroken(stack)) {
 						map.putAll(super.getDefaultAttributeModifiers(slot));
 						if (slot == EquipmentSlot.MAINHAND)
-							map.putAll(factory.apply(null));
+							map.putAll(factory.apply(null, stack));
 					}
 					return map.build();
 				}
 			});
 		}
 
-		public static DeferredHolder<Item, Item> pickaxe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> pickaxe(ItemTier tier, Item.Properties properties, BiFunction<Integer, ItemStack, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_pickaxe"), () -> new PickaxeItem(tier, 1, -2.8F, properties) {
 
 				@Override
@@ -657,14 +656,14 @@ public class RegUtil {
 					if (!isBroken(stack)) {
 						map.putAll(super.getDefaultAttributeModifiers(slot));
 						if (slot == EquipmentSlot.MAINHAND)
-							map.putAll(factory.apply(null));
+							map.putAll(factory.apply(null, stack));
 					}
 					return map.build();
 				}
 			});
 		}
 
-		public static DeferredHolder<Item, Item> shovel(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> shovel(ItemTier tier, Item.Properties properties, BiFunction<Integer, ItemStack, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_shovel"), () -> new ShovelItem(tier, 1.5F, -3.0F, properties) {
 
 				@Override
@@ -705,14 +704,14 @@ public class RegUtil {
 					if (!isBroken(stack)) {
 						map.putAll(super.getDefaultAttributeModifiers(slot));
 						if (slot == EquipmentSlot.MAINHAND)
-							map.putAll(factory.apply(null));
+							map.putAll(factory.apply(null, stack));
 					}
 					return map.build();
 				}
 			});
 		}
 
-		public static DeferredHolder<Item, Item> hoe(ItemTier tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> hoe(ItemTier tier, Item.Properties properties, BiFunction<Integer, ItemStack, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return REGISTRY.register(tier.name().toLowerCase(Locale.US).concat("_hoe"), () -> new HoeItem(tier, -3, 0.0F, properties) {
 
 				@Override
@@ -753,30 +752,30 @@ public class RegUtil {
 					if (!isBroken(stack)) {
 						map.putAll(super.getDefaultAttributeModifiers(slot));
 						if (slot == EquipmentSlot.MAINHAND)
-							map.putAll(factory.apply(null));
+							map.putAll(factory.apply(null, stack));
 					}
 					return map.build();
 				}
 			});
 		}
 
-		public static DeferredHolder<Item, Item> helmet(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> helmet(ArmorMaterial tier, Item.Properties properties, BiFunction<Integer, ItemStack, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_helmet", armorFactory(tier, ArmorItem.Type.HELMET, properties, factory, tooltipConsumer)));
 		}
 
-		public static DeferredHolder<Item, Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> chest(ArmorMaterial tier, Item.Properties properties, BiFunction<Integer, ItemStack, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return chest(tier, properties, factory, (stack, tick) -> false, tooltipConsumer);
 		}
 
-		public static DeferredHolder<Item, Item> chest(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> chest(ArmorMaterial tier, Item.Properties properties, BiFunction<Integer, ItemStack, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<TooltipContext> tooltipConsumer) {
 			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_chest", armorFactory(tier, ArmorItem.Type.CHESTPLATE, properties, factory, elytra, tooltipConsumer)));
 		}
 
-		public static DeferredHolder<Item, Item> legs(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> legs(ArmorMaterial tier, Item.Properties properties, BiFunction<Integer, ItemStack, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_legs", armorFactory(tier, ArmorItem.Type.LEGGINGS, properties, factory, tooltipConsumer)));
 		}
 
-		public static DeferredHolder<Item, Item> boots(ArmorMaterial tier, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> boots(ArmorMaterial tier, Item.Properties properties, BiFunction<Integer, ItemStack, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return wrapArmorItemRegistration(tier, tier.register(REGISTRY, "_boots", armorFactory(tier, ArmorItem.Type.BOOTS, properties, factory, tooltipConsumer)));
 		}
 
@@ -786,11 +785,11 @@ public class RegUtil {
 			return object;
 		}
 
-		private static Supplier<ArmorItem> armorFactory(ArmorMaterial tier, ArmorItem.Type slot, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
+		private static Supplier<ArmorItem> armorFactory(ArmorMaterial tier, ArmorItem.Type slot, Item.Properties properties, BiFunction<Integer, ItemStack, Multimap<Attribute, AttributeModifier>> factory, Consumer<TooltipContext> tooltipConsumer) {
 			return armorFactory(tier, slot, properties, factory, (stack, tick) -> false, tooltipConsumer);
 		}
 
-		private static Supplier<ArmorItem> armorFactory(ArmorMaterial tier, ArmorItem.Type slot, Item.Properties properties, Function<Integer, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<TooltipContext> tooltipConsumer) {
+		private static Supplier<ArmorItem> armorFactory(ArmorMaterial tier, ArmorItem.Type slot, Item.Properties properties, BiFunction<Integer, ItemStack, Multimap<Attribute, AttributeModifier>> factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<TooltipContext> tooltipConsumer) {
 			return () -> new ArmorItem(tier, slot, properties) {
 
 				@Override
@@ -842,7 +841,7 @@ public class RegUtil {
 					if (!isBroken(stack)) {
 						map.putAll(super.getDefaultAttributeModifiers(equipmentSlot));
 						if (equipmentSlot == slot.getSlot())
-							map.putAll(factory.apply(equipmentSlot.getIndex()));
+							map.putAll(factory.apply(equipmentSlot.getIndex(), stack));
 					}
 					return map.build();
 				}
@@ -903,9 +902,12 @@ public class RegUtil {
 		}
 	}
 
-	public record AttributeData(Supplier<ModAttribute> attribute, AttributeModifier.Operation op, double value) {
+	public record AttributeData(Predicate<ItemStack> test, Supplier<ModAttribute> attribute, AttributeModifier.Operation op, double value) {
 		public static AttributeData make(Supplier<ModAttribute> attribute, AttributeModifier.Operation op, double value) {
-			return new AttributeData(attribute, op, value);
+			return make(stack -> true, attribute, op, value);
+		}
+		public static AttributeData make(Predicate<ItemStack> test, Supplier<ModAttribute> attribute, AttributeModifier.Operation op, double value) {
+			return new AttributeData(test, attribute, op, value);
 		}
 	}
 
