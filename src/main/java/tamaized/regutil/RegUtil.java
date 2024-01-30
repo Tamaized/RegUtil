@@ -182,8 +182,15 @@ public class RegUtil {
 			ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
 			for (AttributeData attribute : data) {
 				if (attribute.test.test(stack)) {
-					ModAttribute a = attribute.attribute.get();
-					builder.put(a, new AttributeModifier(slot == null ? a.id : ARMOR_MODIFIER_UUID_PER_SLOT[slot], a.type, attribute.value, attribute.op));
+					Attribute a = attribute.attribute.attribute.get();
+					UUID id = attribute.attribute.id();
+					String type = attribute.attribute.type();
+					if (a instanceof ModAttribute modAttribute) {
+						id = modAttribute.id;
+						type = modAttribute.type;
+					}
+					if (id != null && type != null)
+						builder.put(a, new AttributeModifier(slot == null ? id : ARMOR_MODIFIER_UUID_PER_SLOT[slot], type, attribute.value, attribute.op));
 				}
 			}
 			return builder.build();
@@ -891,6 +898,10 @@ public class RegUtil {
 
 	}
 
+	public record AttributeHolder(Supplier<? extends Attribute> attribute, @Nullable UUID id, @Nullable String type) {
+
+	}
+
 	public static class ModAttribute extends Attribute {
 		final UUID id;
 		final String type;
@@ -902,12 +913,18 @@ public class RegUtil {
 		}
 	}
 
-	public record AttributeData(Predicate<ItemStack> test, Supplier<ModAttribute> attribute, AttributeModifier.Operation op, double value) {
+	public record AttributeData(Predicate<ItemStack> test, AttributeHolder attribute, AttributeModifier.Operation op, double value) {
 		public static AttributeData make(Supplier<ModAttribute> attribute, AttributeModifier.Operation op, double value) {
 			return make(stack -> true, attribute, op, value);
 		}
 		public static AttributeData make(Predicate<ItemStack> test, Supplier<ModAttribute> attribute, AttributeModifier.Operation op, double value) {
-			return new AttributeData(test, attribute, op, value);
+			return new AttributeData(test, new AttributeHolder(attribute, null, null), op, value);
+		}
+		public static AttributeData make(Supplier<Attribute> attribute, AttributeModifier.Operation op, double value, UUID id, String type) {
+			return make(stack -> true, attribute, op, value, id, type);
+		}
+		public static AttributeData make(Predicate<ItemStack> test, Supplier<Attribute> attribute, AttributeModifier.Operation op, double value, UUID id, String type) {
+			return new AttributeData(test, new AttributeHolder(attribute, id, type), op, value);
 		}
 	}
 
