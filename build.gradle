@@ -1,26 +1,14 @@
+import org.jetbrains.gradle.ext.JUnit
+
 plugins {
     id 'java-library'
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.0.+'
+    // Version List: https://projects.neoforged.net/neoforged/ModDevGradle
+    id 'net.neoforged.moddev' version "${mdg_version}"
+    id "com.dorongold.task-tree" version "4.0.0"
 }
-
-repositories {
-    maven {
-        name 'Jared\'s Maven' // JEI
-        url 'https://maven.blamejared.com/'
-    }
-}
-
-version = "${minecraft_version}-${mod_major_version}." + (hasProperty("CIVersion") ? CIVersion : mod_version)
-group = "tamaized.regutil"
-base {
-    archivesName = "RegUtil"
-}
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-compileJava.options.compilerArgs << "-Xlint:all,-classfile,-processing,-deprecation" << "-Werror"
 
 def secrets = new Properties()
 def secretsFile = file('secrets.properties')
@@ -39,47 +27,122 @@ if (secretsFile.exists()) {
     }
 }
 
-runs {
-    def mod_id = 'regutil'
-    configureEach {
-        workingDirectory project.file('run')
-        systemProperty 'forge.logging.console.level', 'debug'
-        systemProperty 'fml.earlyprogresswindow', 'false'
-        systemProperty 'mixin.env.disableRefMap', 'true'
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
 
-        modSource project.sourceSets.main
+version = "${project.minecraft_version}-${project.mod_major_version}." + (hasProperty("CIVersion") ? CIVersion : mod_version)
+group = "tamaized.regutil"
+
+base {
+    archivesName = "RegUtil"
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+compileJava.options.compilerArgs << "-Xlint:all,-classfile,-processing,-deprecation,-this-escape" << "-Werror"
+
+neoForge {
+    version = project.neoforge_version
+
+    validateAccessTransformers = true
+
+    mods {
+        regutil {
+            sourceSet this.sourceSets.main
+        }
     }
 
-    client {
-//        name "Minecraft_Client_${project.minecraft_version}"
-        systemProperty 'forge.enabledGameTestNamespaces', mod_id
-        programArguments.addAll '--username', secrets.getProperty("username")?: 'Dev', secrets.getProperty("uuid") ? '--uuid' : '', secrets.getProperty("uuid")?: ''
+    unitTest {
+        enable()
+        testedMod = mods.regutil
+        project.afterEvaluate {
+            idea {
+                project {
+                    settings {
+                        runConfigurations {
+                            defaults(JUnit) {
+                                vmParameters += " -Dforge.logging.console.level=debug"
+                                vmParameters += " -Dforge.logging.marker.scan=ACCEPT"
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    server {
-//        name "Minecraft_Server_${project.minecraft_version}"
-        systemProperty 'forge.enabledGameTestNamespaces', mod_id
-        programArgument '--nogui'
-    }
+    runs {
+        configureEach {
+            gameDirectory = project.file('run')
+            systemProperty 'forge.logging.console.level', 'debug'
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
 
-    gameTestServer {
-//        name "Minecraft_GameTestServer_${project.minecraft_version}"
-        systemProperty 'forge.enabledGameTestNamespaces', mod_id
-    }
+        client {
+            client()
+            systemProperty 'forge.enabledGameTestNamespaces', mod_id
+            programArguments.addAll '--username', secrets.getProperty("username") ?: 'Dev', secrets.getProperty("uuid") ? '--uuid' : '', secrets.getProperty("uuid") ?: ''
+        }
 
-    data {
-//        name "Minecraft_Data_${project.minecraft_version}"
-        workingDirectory project.file('run-data')
-        programArguments.addAll '--mod', mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        server {
+            server()
+            systemProperty 'forge.enabledGameTestNamespaces', mod_id
+            programArgument '--nogui'
+        }
+
+        data {
+            data()
+            gameDirectory = project.file('run-data')
+            programArguments.addAll '--mod', mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+    }
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        name 'Jared\'s Maven' // JEI
+        url 'https://maven.blamejared.com/'
+    }
+}
+
+dependencies {
+    runtimeOnly "mezz.jei:jei-${project.base_minecraft_version}-neoforge:${project.jei_version}"
+
+    testImplementation group: 'net.neoforged', name: 'testframework', version: project.neoforge_version
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.10.3'
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.10.3'
+    testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '5.12.0'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "failed"
+
+        showExceptions true
+        exceptionFormat "full"
+        showCauses true
+        showStackTraces true
+
+        showStandardStreams = false
     }
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 processResources {
-    filesMatching("META-INF/mods.toml") {
+    def version = project.version
+    filesMatching("META-INF/neoforge.mods.toml") {
         expand([
-                'version': "${project.version}"
+                'file': ['jarVersion': "${version}"]
         ])
     }
 }
@@ -98,25 +161,18 @@ jar {
     }
 }
 
-
-dependencies {
-    implementation "net.neoforged:neoforge:${project.neoforge_version}"
-
-//    runtimeOnly fg.deobf("mezz.jei:${project.jei_version}")
-}
-
 def mavenUser = hasProperty("CIMUser") ? CIMUser : secrets.getProperty("maven_username")
 def mavenToken = hasProperty("CIMToken") ? CIMToken : secrets.getProperty("maven_password")
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        create('mavenJava', MavenPublication) {
             afterEvaluate {
-                artifact project.jar
-                artifact project.sourceJar
+                artifact this.project.jar
+                artifact this.project.sourceJar
             }
-            setGroupId 'tamaized'
-            setArtifactId 'regutil'
+            groupId 'tamaized'
+            artifactId this.project.mod_id
         }
     }
     repositories {
@@ -140,10 +196,3 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
-task incrBuildNum doLast {
-    ant.propertyfile(file: "gradle.properties") {
-        entry(key: "mod_version", value: Integer.parseInt(project.mod_version) + 1)
-    }
-}
-
-build.finalizedBy(incrBuildNum)
