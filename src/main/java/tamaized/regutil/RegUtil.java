@@ -15,6 +15,7 @@ import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
+import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
@@ -33,7 +34,7 @@ import java.util.function.*;
 @SuppressWarnings({"unused", "DuplicatedCode", "UnusedReturnValue"})
 public class RegUtil {
 
-	private static String MODID = "regutil";
+	private static String MODID = null;
 	private static String BROKEN_STATE_NAME;
 
 	private static final List<DeferredRegister<?>> REGISTERS = new ArrayList<>();
@@ -68,9 +69,15 @@ public class RegUtil {
 		return slot >= Inventory.INVENTORY_SIZE && slot < Inventory.INVENTORY_SIZE + Inventory.ALL_ARMOR_SLOTS.length;
 	}
 
+	private static void initModID() {
+		if (MODID == null)
+			MODID = ModLoadingContext.get().getActiveNamespace();
+	}
+
 	@SafeVarargs
-	public static void setup(String modid, IEventBus bus, Supplier<RegistryClass>... inits) {
-		RegUtil.MODID = modid;
+	public static void setup(Supplier<RegistryClass>... inits) {
+		initModID();
+		@NotNull IEventBus bus = Objects.requireNonNull(ModLoadingContext.get().getActiveContainer().getEventBus());
 		RegUtil.BROKEN_STATE_NAME = ResourceLocation.fromNamespaceAndPath(MODID, "broken_state_attributes").toString();
 		create(Registries.ITEM); // Pre-Bake the Item DeferredRegister for ToolAndArmorHelper
 		for (Supplier<RegistryClass> init : inits)
@@ -158,6 +165,7 @@ public class RegUtil {
 
 	@SuppressWarnings("unchecked")
 	public static <R> DeferredRegister<R> create(ResourceKey<Registry<R>> type) {
+		initModID();
 		if (type.equals(Registries.ITEM) && ToolAndArmorHelper.REGISTRY != null)
 			return (DeferredRegister<R>) ToolAndArmorHelper.REGISTRY;
 		DeferredRegister<R> def = DeferredRegister.create(type, RegUtil.MODID);
