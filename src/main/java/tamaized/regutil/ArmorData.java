@@ -10,7 +10,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import java.util.Locale;
 import java.util.function.Supplier;
 
-public record ArmorData(Holder<ArmorMaterial> material, ArmorDataModel model) {
+public record ArmorData(Holder<ArmorMaterial> material, int durabilityFactor, ArmorDataModel model) {
 
 	public DeferredHolder<Item, Item> register(DeferredRegister<Item> REGISTRY, String append, Supplier<ArmorItem> obj) {
 		return REGISTRY.register(material.unwrap().orThrow().location().getPath().toLowerCase(Locale.US).concat(append), obj);
