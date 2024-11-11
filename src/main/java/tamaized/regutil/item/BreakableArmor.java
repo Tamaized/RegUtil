@@ -70,7 +70,7 @@ public class BreakableArmor extends ArmorItem {
 
 	@Override
 	public @org.jetbrains.annotations.Nullable ResourceLocation getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, ArmorMaterial.Layer layer, boolean innerModel) {
-		return data.getArmorTexture(stack, entity, slot, innerModel).orElseGet(() -> super.getArmorTexture(stack, entity, slot, layer, innerModel));
+		return data.model().getArmorTexture(stack, entity, slot, innerModel).orElseGet(() -> super.getArmorTexture(stack, entity, slot, layer, innerModel));
 	}
 
 }
