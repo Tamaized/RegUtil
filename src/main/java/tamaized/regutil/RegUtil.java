@@ -62,7 +62,7 @@ public class RegUtil {
 	}
 
 	public static boolean isArmorOverlay(ItemStack stack) {
-		return ARMOR_ITEMS.stream().anyMatch(o -> o.getValue().overlay() && o.getKey().isBound() && stack.is(o.getKey().get()));
+		return ARMOR_ITEMS.stream().anyMatch(o -> o.getValue().model().hasOverlay() && o.getKey().isBound() && stack.is(o.getKey().get()));
 	}
 
 	public static boolean isSlotAnArmorSlot(int slot) {
@@ -146,16 +146,16 @@ public class RegUtil {
 		bus.addListener(RegisterClientExtensionsEvent.class, event -> ARMOR_ITEMS.forEach(p -> event.registerItem(new IClientItemExtensions() {
 			@Override
 			public @NotNull HumanoidModel<?> getHumanoidArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlot armorSlot, HumanoidModel<?> _default) {
-				HumanoidModel<?> model = p.getValue().getArmorModel(entityLiving, itemStack, armorSlot, _default);
+				HumanoidModel<?> model = p.getValue().model().getArmorModel(entityLiving, itemStack, armorSlot, _default);
 				if (model != null)
 					return model;
-				if (!p.getValue().fullbright() && !p.getValue().overlay())
+				if (!p.getValue().model().isFullbright() && !p.getValue().model().hasOverlay())
 					return IClientItemExtensions.super.getHumanoidArmorModel(entityLiving, itemStack, armorSlot, _default);
 				ModelLayerLocation layer = armorSlot == ArmorItem.Type.LEGGINGS.getSlot() ? ModelLayers.PLAYER_INNER_ARMOR : ModelLayers.PLAYER_OUTER_ARMOR;
 				return new HumanoidModel<>(Minecraft.getInstance().getEntityModels().bakeLayer(layer)) {
 					@Override
 					public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, int color) {
-						final boolean fullbright = p.getValue().fullbright() || (p.getValue().overlayFullbright() && RegUtil.renderingArmorOverlay);
+						final boolean fullbright = p.getValue().model().isFullbright() || (p.getValue().model().isOverlayFullbright() && RegUtil.renderingArmorOverlay);
 						super.renderToBuffer(poseStack, buffer, fullbright ? 0xF000F0 : packedLight, packedOverlay, color);
 					}
 				};
