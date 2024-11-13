@@ -180,7 +180,8 @@ public class RegUtil {
 		private static DeferredRegister<Item> REGISTRY;
 
 		public record TooltipContext(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
-
+			public static final Consumer<TooltipContext> EMPTY = context -> {
+			};
 		}
 
 		public static DeferredHolder<Item, Item> sword(ItemTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
