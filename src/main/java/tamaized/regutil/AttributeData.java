@@ -10,8 +10,16 @@ import java.util.function.Predicate;
 
 public record AttributeData(Predicate<ItemStack> test, Holder<Attribute> attribute, String id, AttributeModifier.Operation op, double value, EquipmentSlotGroup slot) {
 
+	public static AttributeData make(Holder<Attribute> attribute, AttributeModifier.Operation op, double value, EquipmentSlotGroup slot) {
+		return make(stack -> true, attribute, op, value, slot);
+	}
+
 	public static AttributeData make(Holder<Attribute> attribute, String id, AttributeModifier.Operation op, double value, EquipmentSlotGroup slot) {
 		return make(stack -> true, attribute, id, op, value, slot);
+	}
+
+	public static AttributeData make(Predicate<ItemStack> test, Holder<Attribute> attribute, AttributeModifier.Operation op, double value, EquipmentSlotGroup slot) {
+		return make(test, attribute, attribute.unwrapKey().orElseThrow().location().getPath(), op, value, slot);
 	}
 
 	public static AttributeData make(Predicate<ItemStack> test, Holder<Attribute> attribute, String id, AttributeModifier.Operation op, double value, EquipmentSlotGroup slot) {
