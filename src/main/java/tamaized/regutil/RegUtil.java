@@ -37,7 +37,7 @@ public class RegUtil {
 	private static String MODID = null;
 	private static String BROKEN_STATE_NAME;
 
-	private static final List<DeferredRegister<?>> REGISTERS = new ArrayList<>();
+	private static final Map<ResourceKey<?>, DeferredRegister<?>> REGISTERS = new HashMap<>();
 	private static final Map<Item, List<DeferredHolder<Item, Item>>> BOWS = new HashMap<>() {{
 		put(Items.BOW, new ArrayList<>());
 		put(Items.CROSSBOW, new ArrayList<>());
@@ -134,7 +134,7 @@ public class RegUtil {
 			}
 
 		});*/
-		for (DeferredRegister<?> register : REGISTERS)
+		for (DeferredRegister<?> register : REGISTERS.values())
 			register.register(bus);
 
 		NeoForge.EVENT_BUS.addListener(ItemAttributeModifierEvent.class, event -> GEAR_ITEMS.stream()
@@ -166,10 +166,11 @@ public class RegUtil {
 	@SuppressWarnings("unchecked")
 	public static <R> DeferredRegister<R> create(ResourceKey<Registry<R>> type) {
 		initModID();
-		if (type.equals(Registries.ITEM) && ToolAndArmorHelper.REGISTRY != null)
-			return (DeferredRegister<R>) ToolAndArmorHelper.REGISTRY;
+		DeferredRegister<?> value = REGISTERS.get(type);
+		if (value != null)
+			return (DeferredRegister<R>) value;
 		DeferredRegister<R> def = DeferredRegister.create(type, RegUtil.MODID);
-		REGISTERS.add(def);
+		REGISTERS.put(type, def);
 		if (type.equals(Registries.ITEM))
 			ToolAndArmorHelper.REGISTRY = (DeferredRegister<Item>) def;
 		return def;
