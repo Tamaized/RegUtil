@@ -7,12 +7,14 @@ import net.minecraft.world.item.component.ItemAttributeModifiers;
 
 import java.util.Arrays;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public interface AttributeFactory extends Function<ItemStack, Stream<ItemAttributeModifiers.Entry>> {
 
-	static AttributeFactory make(AttributeData... data) {
+	static AttributeFactory make(Supplier<AttributeData>... data) {
 		return stack -> Arrays.stream(data)
+			.map(Supplier::get)
 			.filter(a -> a.test().test(stack))
 			.map(d -> new ItemAttributeModifiers.Entry(d.attribute(), new AttributeModifier(ResourceLocation.fromNamespaceAndPath(RegUtil.getModID(), d.id()), d.value(), d.op()), d.slot()));
 	}
