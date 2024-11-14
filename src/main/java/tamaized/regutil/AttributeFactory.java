@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 public interface AttributeFactory extends Function<ItemStack, Stream<ItemAttributeModifiers.Entry>> {
 
+	@SafeVarargs
 	static AttributeFactory make(Supplier<AttributeData>... data) {
 		return stack -> Arrays.stream(data)
 			.map(Supplier::get)
