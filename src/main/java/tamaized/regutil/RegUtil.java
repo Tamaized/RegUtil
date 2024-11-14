@@ -43,7 +43,7 @@ public class RegUtil {
 		put(Items.CROSSBOW, new ArrayList<>());
 	}};
 	private static final List<Pair<DeferredHolder<Item, Item>, AttributeFactory>> GEAR_ITEMS = new ArrayList<>();
-	private static final List<Pair<DeferredHolder<Item, Item>, ArmorData>> ARMOR_ITEMS = new ArrayList<>();
+	private static final List<Pair<DeferredHolder<Item, Item>, Supplier<ArmorData>>> ARMOR_ITEMS = new ArrayList<>();
 	public static boolean renderingArmorOverlay = false;
 
 	public static String getModID() {
@@ -62,7 +62,7 @@ public class RegUtil {
 	}
 
 	public static boolean isArmorOverlay(ItemStack stack) {
-		return ARMOR_ITEMS.stream().anyMatch(o -> o.getValue().model().hasOverlay() && o.getKey().isBound() && stack.is(o.getKey().get()));
+		return ARMOR_ITEMS.stream().anyMatch(o -> o.getValue().get().model().hasOverlay() && o.getKey().isBound() && stack.is(o.getKey().get()));
 	}
 
 	public static boolean isSlotAnArmorSlot(int slot) {
@@ -146,16 +146,16 @@ public class RegUtil {
 		bus.addListener(RegisterClientExtensionsEvent.class, event -> ARMOR_ITEMS.forEach(p -> event.registerItem(new IClientItemExtensions() {
 			@Override
 			public @NotNull HumanoidModel<?> getHumanoidArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlot armorSlot, HumanoidModel<?> _default) {
-				HumanoidModel<?> model = p.getValue().model().getArmorModel(entityLiving, itemStack, armorSlot, _default);
+				HumanoidModel<?> model = p.getValue().get().model().getArmorModel(entityLiving, itemStack, armorSlot, _default);
 				if (model != null)
 					return model;
-				if (!p.getValue().model().isFullbright() && !p.getValue().model().hasOverlay())
+				if (!p.getValue().get().model().isFullbright() && !p.getValue().get().model().hasOverlay())
 					return IClientItemExtensions.super.getHumanoidArmorModel(entityLiving, itemStack, armorSlot, _default);
 				ModelLayerLocation layer = armorSlot == ArmorItem.Type.LEGGINGS.getSlot() ? ModelLayers.PLAYER_INNER_ARMOR : ModelLayers.PLAYER_OUTER_ARMOR;
 				return new HumanoidModel<>(Minecraft.getInstance().getEntityModels().bakeLayer(layer)) {
 					@Override
 					public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, int color) {
-						final boolean fullbright = p.getValue().model().isFullbright() || (p.getValue().model().isOverlayFullbright() && RegUtil.renderingArmorOverlay);
+						final boolean fullbright = p.getValue().get().model().isFullbright() || (p.getValue().get().model().isOverlayFullbright() && RegUtil.renderingArmorOverlay);
 						super.renderToBuffer(poseStack, buffer, fullbright ? 0xF000F0 : packedLight, packedOverlay, color);
 					}
 				};
@@ -277,24 +277,28 @@ public class RegUtil {
 			);
 		}
 
-		public static DeferredHolder<Item, Item> helmet(ArmorData data, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return wrapArmorItemRegistration(data, factory, data.register(REGISTRY, "_helmet", armorFactory(data, ArmorItem.Type.HELMET, properties, factory, tooltipConsumer)));
+		public static DeferredHolder<Item, Item> helmet(String baseName, Supplier<ArmorData> data, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
+			return wrapArmorItemRegistration(data, factory, gearItemRegistration(baseName, "_helmet", armorFactory(data, ArmorItem.Type.HELMET, properties, factory, tooltipConsumer)));
 		}
 
-		public static DeferredHolder<Item, Item> chest(ArmorData data, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return chest(data, properties, factory, (stack, tick) -> false, tooltipConsumer);
+		public static DeferredHolder<Item, Item> chest(String baseName, Supplier<ArmorData> data, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
+			return chest(baseName, data, properties, factory, (stack, tick) -> false, tooltipConsumer);
 		}
 
-		public static DeferredHolder<Item, Item> chest(ArmorData data, Item.Properties properties, AttributeFactory factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<TooltipContext> tooltipConsumer) {
-			return wrapArmorItemRegistration(data, factory, data.register(REGISTRY, "_chest", armorFactory(data, ArmorItem.Type.CHESTPLATE, properties, factory, elytra, tooltipConsumer)));
+		public static DeferredHolder<Item, Item> chest(String baseName, Supplier<ArmorData> data, Supplier<Item.Properties> properties, AttributeFactory factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<TooltipContext> tooltipConsumer) {
+			return wrapArmorItemRegistration(data, factory, gearItemRegistration(baseName, "_chest", armorFactory(data, ArmorItem.Type.CHESTPLATE, properties, factory, elytra, tooltipConsumer)));
 		}
 
-		public static DeferredHolder<Item, Item> legs(ArmorData data, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return wrapArmorItemRegistration(data, factory, data.register(REGISTRY, "_legs", armorFactory(data, ArmorItem.Type.LEGGINGS, properties, factory, tooltipConsumer)));
+		public static DeferredHolder<Item, Item> legs(String baseName, Supplier<ArmorData> data, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
+			return wrapArmorItemRegistration(data, factory, gearItemRegistration(baseName, "_legs", armorFactory(data, ArmorItem.Type.LEGGINGS, properties, factory, tooltipConsumer)));
 		}
 
-		public static DeferredHolder<Item, Item> boots(ArmorData data, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return wrapArmorItemRegistration(data, factory, data.register(REGISTRY, "_boots", armorFactory(data, ArmorItem.Type.BOOTS, properties, factory, tooltipConsumer)));
+		public static DeferredHolder<Item, Item> boots(String baseName, Supplier<ArmorData> data, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
+			return wrapArmorItemRegistration(data, factory, gearItemRegistration(baseName, "_boots", armorFactory(data, ArmorItem.Type.BOOTS, properties, factory, tooltipConsumer)));
+		}
+
+		private static DeferredHolder<Item, Item> gearItemRegistration(String base, String suffix, Supplier<ArmorItem> item) {
+			return REGISTRY.register(base.concat(suffix), item);
 		}
 
 		private static DeferredHolder<Item, Item> wrapGearItemRegistration(AttributeFactory data, DeferredHolder<Item, Item> object) {
@@ -302,17 +306,17 @@ public class RegUtil {
 			return object;
 		}
 
-		private static DeferredHolder<Item, Item> wrapArmorItemRegistration(ArmorData data, AttributeFactory factory, DeferredHolder<Item, Item> object) {
+		private static DeferredHolder<Item, Item> wrapArmorItemRegistration(Supplier<ArmorData> data, AttributeFactory factory, DeferredHolder<Item, Item> object) {
 			ARMOR_ITEMS.add(Pair.of(object, data));
 			return wrapGearItemRegistration(factory, object);
 		}
 
-		private static Supplier<ArmorItem> armorFactory(ArmorData data, ArmorItem.Type slot, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
+		private static Supplier<ArmorItem> armorFactory(Supplier<ArmorData> data, ArmorItem.Type slot, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
 			return armorFactory(data, slot, properties, factory, (stack, tick) -> false, tooltipConsumer);
 		}
 
-		private static Supplier<ArmorItem> armorFactory(ArmorData data, ArmorItem.Type slot, Item.Properties properties, AttributeFactory factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<TooltipContext> tooltipConsumer) {
-			return () -> new BreakableArmor(data, elytra, slot, properties, tooltipConsumer);
+		private static Supplier<ArmorItem> armorFactory(Supplier<ArmorData> data, ArmorItem.Type slot, Supplier<Item.Properties> properties, AttributeFactory factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<TooltipContext> tooltipConsumer) {
+			return () -> new BreakableArmor(data.get(), elytra, slot, properties.get(), tooltipConsumer);
 		}
 
 	}
