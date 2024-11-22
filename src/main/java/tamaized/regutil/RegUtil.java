@@ -185,7 +185,7 @@ public class RegUtil {
 			};
 		}
 
-		public static DeferredHolder<Item, Item> sword(ItemTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> sword(ToolTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
 			return wrapGearItemRegistration(
 				factory,
 				REGISTRY.register(
@@ -195,7 +195,7 @@ public class RegUtil {
 			);
 		}
 
-		public static DeferredHolder<Item, Item> shield(ItemTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> shield(ToolTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
 			return wrapGearItemRegistration(
 				factory,
 				REGISTRY.register(
@@ -211,7 +211,7 @@ public class RegUtil {
 			return o;
 		}
 
-		public static DeferredHolder<Item, Item> bow(ItemTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> bow(ToolTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
 			return wrapGearItemRegistration(
 				factory,
 				registerBow(
@@ -224,7 +224,7 @@ public class RegUtil {
 			);
 		}
 
-		public static DeferredHolder<Item, Item> xbow(ItemTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> xbow(ToolTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
 			return wrapGearItemRegistration(
 				factory,
 				registerBow(
@@ -237,7 +237,7 @@ public class RegUtil {
 			);
 		}
 
-		public static DeferredHolder<Item, Item> axe(ItemTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> axe(ToolTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
 			return wrapGearItemRegistration(
 				factory,
 				REGISTRY.register(
@@ -247,7 +247,7 @@ public class RegUtil {
 			);
 		}
 
-		public static DeferredHolder<Item, Item> pickaxe(ItemTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> pickaxe(ToolTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
 			return wrapGearItemRegistration(
 				factory,
 				REGISTRY.register(
@@ -257,7 +257,7 @@ public class RegUtil {
 			);
 		}
 
-		public static DeferredHolder<Item, Item> shovel(ItemTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> shovel(ToolTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
 			return wrapGearItemRegistration(
 				factory,
 				REGISTRY.register(
@@ -267,7 +267,7 @@ public class RegUtil {
 			);
 		}
 
-		public static DeferredHolder<Item, Item> hoe(ItemTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
+		public static DeferredHolder<Item, Item> hoe(ToolTier tier, Item.Properties properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
 			return wrapGearItemRegistration(
 				factory,
 				REGISTRY.register(
