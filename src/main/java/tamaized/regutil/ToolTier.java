@@ -9,7 +9,6 @@ import net.neoforged.neoforge.common.util.Lazy;
 import java.util.function.Supplier;
 
 public class ToolTier implements Tier {
-	private final String name;
 	private final Supplier<TagKey<Block>> incorrectBlocksForDrops;
 	private final int maxUses;
 	private final float efficiency;
@@ -17,18 +16,13 @@ public class ToolTier implements Tier {
 	private final int enchantability;
 	private final Lazy<Ingredient> repairMaterial;
 
-	public ToolTier(String name, Supplier<TagKey<Block>> incorrectBlocksForDrops, int maxUsesIn, float efficiencyIn, float attackDamageIn, int enchantabilityIn, Supplier<Ingredient> repairMaterialIn) {
-		this.name = name;
+	public ToolTier(Supplier<TagKey<Block>> incorrectBlocksForDrops, int maxUsesIn, float efficiencyIn, float attackDamageIn, int enchantabilityIn, Supplier<Ingredient> repairMaterialIn) {
 		this.incorrectBlocksForDrops = incorrectBlocksForDrops;
 		this.maxUses = maxUsesIn;
 		this.efficiency = efficiencyIn;
 		this.attackDamage = attackDamageIn;
 		this.enchantability = enchantabilityIn;
 		this.repairMaterial = Lazy.of(repairMaterialIn);
-	}
-
-	public String name() {
-		return name;
 	}
 
 	@Override
