@@ -22,33 +22,33 @@ public class BreakableHelper {
 		return stack.isDamageableItem() && stack.getDamageValue() >= stack.getMaxDamage() - 1;
 	}
 
-	static void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag, Consumer<RegUtil.ToolAndArmorHelper.TooltipContext> tooltipConsumer) {
+	public static void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag, Consumer<RegUtil.ToolAndArmorHelper.TooltipContext> tooltipConsumer) {
 		if (isBroken(stack))
 			tooltipComponents.add(Component.translatable(RegUtil.getModID() + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
 		tooltipConsumer.accept(new RegUtil.ToolAndArmorHelper.TooltipContext(stack, context.level(), tooltipComponents, tooltipFlag));
 	}
 
-	static int damageItem(ItemStack stack, int amount, Consumer<Item> onBroken) {
+	public static int damageItem(ItemStack stack, int amount, Consumer<Item> onBroken) {
 		int remaining = (stack.getMaxDamage() - 1) - stack.getDamageValue();
 		if (amount >= remaining)
 			onBroken.accept(stack.getItem());
 		return Math.min(remaining, amount);
 	}
 
-	static float getDestroySpeed(ItemStack stack, Supplier<Float> superCall) {
+	public static float getDestroySpeed(ItemStack stack, Supplier<Float> superCall) {
 		return isBroken(stack) ? 0 : superCall.get();
 	}
 
-	static boolean hurtEnemy(ItemStack stack, Supplier<Boolean> superCall) {
+	public static boolean hurtEnemy(ItemStack stack, Supplier<Boolean> superCall) {
 		return !isBroken(stack) && superCall.get();
 	}
 
-	static InteractionResultHolder<ItemStack> use(Player playerIn, InteractionHand handIn, Supplier<InteractionResultHolder<ItemStack>> superCall) {
+	public static InteractionResultHolder<ItemStack> use(Player playerIn, InteractionHand handIn, Supplier<InteractionResultHolder<ItemStack>> superCall) {
 		final ItemStack stack = playerIn.getItemInHand(handIn);
 		return isBroken(stack) ? InteractionResultHolder.fail(stack) : superCall.get();
 	}
 
-	static InteractionResult useOn(UseOnContext context, Supplier<InteractionResult> superCall) {
+	public static InteractionResult useOn(UseOnContext context, Supplier<InteractionResult> superCall) {
 		return isBroken(context.getItemInHand()) ? InteractionResult.FAIL : superCall.get();
 	}
 
