@@ -38,7 +38,7 @@ public class RegUtil {
 	private static String BROKEN_STATE_NAME;
 
 	private static final Map<ResourceKey<?>, DeferredRegister<?>> REGISTERS = new HashMap<>();
-	private static final Map<Item, List<DeferredHolder<Item, Item>>> BOWS = new HashMap<>() {{
+	private static final Map<Item, List<DeferredHolder<Item, Item>>> BOWS = new HashMap<>() {{ // TODO: use an EnumMap instead
 		put(Items.BOW, new ArrayList<>());
 		put(Items.CROSSBOW, new ArrayList<>());
 	}};
@@ -186,23 +186,11 @@ public class RegUtil {
 		}
 
 		public static DeferredHolder<Item, Item> sword(String baseName, Supplier<ToolTier> tier, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return wrapGearItemRegistration(
-				factory,
-				REGISTRY.register(
-					baseName.concat("_sword"),
-					() -> new BreakableSword(tier.get(), properties.get(), tooltipConsumer)
-				)
-			);
+			return gear("sword", baseName, factory, () -> new BreakableSword(tier.get(), properties.get(), tooltipConsumer));
 		}
 
 		public static DeferredHolder<Item, Item> shield(String baseName, Supplier<ToolTier> tier, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return wrapGearItemRegistration(
-				factory,
-				REGISTRY.register(
-					baseName.concat("_shield"),
-					() -> new BreakableShield(tier.get(), properties.get(), tooltipConsumer)
-				)
-			);
+			return gear("shield", baseName, factory, () -> new BreakableShield(tier.get(), properties.get(), tooltipConsumer));
 		}
 
 		private static DeferredHolder<Item, Item> registerBow(Item item, DeferredHolder<Item, Item> o) {
@@ -212,113 +200,60 @@ public class RegUtil {
 		}
 
 		public static DeferredHolder<Item, Item> bow(String baseName, Supplier<ToolTier> tier, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return wrapGearItemRegistration(
-				factory,
-				registerBow(
-					Items.BOW,
-					REGISTRY.register(
-						baseName.concat("_bow"),
-						() -> new BreakableBow(tier.get(), properties.get(), tooltipConsumer)
-					)
-				)
-			);
+			return registerBow(Items.BOW, gear("bow", baseName, factory, () -> new BreakableBow(tier.get(), properties.get(), tooltipConsumer)));
 		}
 
 		public static DeferredHolder<Item, Item> xbow(String baseName, Supplier<ToolTier> tier, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return wrapGearItemRegistration(
-				factory,
-				registerBow(
-					Items.CROSSBOW,
-					REGISTRY.register(
-						baseName.concat("_xbow"),
-						() -> new BreakableCrossbow(tier.get(), properties.get(), tooltipConsumer)
-					)
-				)
-			);
+			return registerBow(Items.CROSSBOW, gear("xbow", baseName, factory, () -> new BreakableCrossbow(tier.get(), properties.get(), tooltipConsumer)));
 		}
 
 		public static DeferredHolder<Item, Item> axe(String baseName, Supplier<ToolTier> tier, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return wrapGearItemRegistration(
-				factory,
-				REGISTRY.register(
-					baseName.concat("_axe"),
-					() -> new BreakableLootingAxe(tier.get(), properties.get(), tooltipConsumer)
-				)
-			);
+			return gear("axe", baseName, factory, () -> new BreakableLootingAxe(tier.get(), properties.get(), tooltipConsumer));
 		}
 
 		public static DeferredHolder<Item, Item> pickaxe(String baseName, Supplier<ToolTier> tier, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return wrapGearItemRegistration(
-				factory,
-				REGISTRY.register(
-					baseName.concat("_pickaxe"),
-					() -> new BreakablePickaxe(tier.get(), properties.get(), tooltipConsumer)
-				)
-			);
+			return gear("pickaxe", baseName, factory, () -> new BreakablePickaxe(tier.get(), properties.get(), tooltipConsumer));
 		}
 
 		public static DeferredHolder<Item, Item> shovel(String baseName, Supplier<ToolTier> tier, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return wrapGearItemRegistration(
-				factory,
-				REGISTRY.register(
-					baseName.concat("_shovel"),
-					() -> new BreakableShovel(tier.get(), properties.get(), tooltipConsumer)
-				)
-			);
+			return gear("shovel", baseName, factory, () -> new BreakableShovel(tier.get(), properties.get(), tooltipConsumer));
 		}
 
 		public static DeferredHolder<Item, Item> hoe(String baseName, Supplier<ToolTier> tier, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return wrapGearItemRegistration(
-				factory,
-				REGISTRY.register(
-					baseName.concat("_hoe"),
-					() -> new BreakableHoe(tier.get(), properties.get(), tooltipConsumer)
-				)
-			);
+			return gear("hoe", baseName, factory, () -> new BreakableHoe(tier.get(), properties.get(), tooltipConsumer));
 		}
 
 		public static DeferredHolder<Item, Item> helmet(String baseName, Supplier<ArmorData> data, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return wrapArmorItemRegistration(data, factory, gearItemRegistration(baseName, "_helmet", armorFactory(data, ArmorItem.Type.HELMET, properties, factory, tooltipConsumer)));
+			return gear("helmet", baseName, factory, data, () -> new BreakableArmor(data.get(), (stack, tick) -> false, ArmorItem.Type.HELMET, properties.get(), tooltipConsumer));
 		}
 
 		public static DeferredHolder<Item, Item> chest(String baseName, Supplier<ArmorData> data, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return chest(baseName, data, properties, factory, (stack, tick) -> false, tooltipConsumer);
+			return gear("chest", baseName, factory, data, () -> new BreakableArmor(data.get(), (stack, tick) -> false, ArmorItem.Type.CHESTPLATE, properties.get(), tooltipConsumer));
 		}
 
 		public static DeferredHolder<Item, Item> chest(String baseName, Supplier<ArmorData> data, Supplier<Item.Properties> properties, AttributeFactory factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<TooltipContext> tooltipConsumer) {
-			return wrapArmorItemRegistration(data, factory, gearItemRegistration(baseName, "_chest", armorFactory(data, ArmorItem.Type.CHESTPLATE, properties, factory, elytra, tooltipConsumer)));
+			return gear("chest", baseName, factory, data, () -> new BreakableArmor(data.get(), elytra, ArmorItem.Type.CHESTPLATE, properties.get(), tooltipConsumer));
 		}
 
 		public static DeferredHolder<Item, Item> legs(String baseName, Supplier<ArmorData> data, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return wrapArmorItemRegistration(data, factory, gearItemRegistration(baseName, "_legs", armorFactory(data, ArmorItem.Type.LEGGINGS, properties, factory, tooltipConsumer)));
+			return gear("legs", baseName, factory, data, () -> new BreakableArmor(data.get(), (stack, tick) -> false, ArmorItem.Type.LEGGINGS, properties.get(), tooltipConsumer));
 		}
 
 		public static DeferredHolder<Item, Item> boots(String baseName, Supplier<ArmorData> data, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return wrapArmorItemRegistration(data, factory, gearItemRegistration(baseName, "_boots", armorFactory(data, ArmorItem.Type.BOOTS, properties, factory, tooltipConsumer)));
+			return gear("boots", baseName, factory, data, () -> new BreakableArmor(data.get(), (stack, tick) -> false, ArmorItem.Type.BOOTS, properties.get(), tooltipConsumer));
 		}
 
-		private static DeferredHolder<Item, Item> gearItemRegistration(String base, String suffix, Supplier<ArmorItem> item) {
-			return REGISTRY.register(base.concat(suffix), item);
+		public static DeferredHolder<Item, Item> gear(String type, String baseName, AttributeFactory factory, Supplier<Item> itemInit) {
+			return gear(type, baseName, factory, null, itemInit);
 		}
 
-		private static DeferredHolder<Item, Item> wrapGearItemRegistration(AttributeFactory data, DeferredHolder<Item, Item> object) {
-			GEAR_ITEMS.add(Pair.of(object, data));
+		public static DeferredHolder<Item, Item> gear(String type, String baseName, AttributeFactory factory, @Nullable Supplier<ArmorData> armorData, Supplier<Item> itemInit) {
+			DeferredHolder<Item, Item> object = REGISTRY.register(baseName.concat("_").concat(type), itemInit);
+			GEAR_ITEMS.add(Pair.of(object, factory));
+			if (armorData != null)
+				ARMOR_ITEMS.add(Pair.of(object, armorData));
 			return object;
 		}
-
-		private static DeferredHolder<Item, Item> wrapArmorItemRegistration(Supplier<ArmorData> data, AttributeFactory factory, DeferredHolder<Item, Item> object) {
-			ARMOR_ITEMS.add(Pair.of(object, data));
-			return wrapGearItemRegistration(factory, object);
-		}
-
-		private static Supplier<ArmorItem> armorFactory(Supplier<ArmorData> data, ArmorItem.Type slot, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return armorFactory(data, slot, properties, factory, (stack, tick) -> false, tooltipConsumer);
-		}
-
-		private static Supplier<ArmorItem> armorFactory(Supplier<ArmorData> data, ArmorItem.Type slot, Supplier<Item.Properties> properties, AttributeFactory factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<TooltipContext> tooltipConsumer) {
-			return () -> new BreakableArmor(data.get(), elytra, slot, properties.get(), tooltipConsumer);
-		}
-
 	}
 
 }
