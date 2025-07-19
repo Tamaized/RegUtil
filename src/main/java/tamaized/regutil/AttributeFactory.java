@@ -22,7 +22,7 @@ public interface AttributeFactory extends Function<ItemStack, Stream<ItemAttribu
 		return stack -> list.stream()
 			.map(Supplier::get)
 			.filter(a -> a.test().test(stack))
-			.map(d -> new ItemAttributeModifiers.Entry(d.attribute(), new AttributeModifier(ResourceLocation.fromNamespaceAndPath(RegUtil.getModID(), d.id()), d.value(), d.op()), d.slot()));
+			.map(d -> new ItemAttributeModifiers.Entry(d.attribute(), new AttributeModifier(ResourceLocation.fromNamespaceAndPath(RegUtil.getModID(), d.id() + "_" + d.slot().getSerializedName()), d.value(), d.op()), d.slot()));
 	}
 
 }
