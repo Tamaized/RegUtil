@@ -1,5 +1,3 @@
-import org.jetbrains.gradle.ext.JUnit
-
 plugins {
     id 'java-library'
     id 'eclipse'
@@ -35,47 +33,44 @@ idea {
 }
 
 version = "${project.minecraft_version}-${project.mod_major_version}." + (hasProperty("CIVersion") ? CIVersion : mod_version)
-group = "tamaized.regutil"
-
-base {
-    archivesName = "RegUtil"
-}
+group = group_name
 
 java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
+	toolchain {
+		languageVersion.set(JavaLanguageVersion.of(25))
+	}
 }
+
 compileJava.options.compilerArgs << "-Xlint:all,-classfile,-processing,-deprecation,-this-escape" << "-Werror"
 
+base {
+    archivesName = "${project.mod_id}"
+}
+
+sourceSets {
+	main {
+		resources {
+			srcDir 'src/generated/resources'
+		}
+	}
+}
+
 neoForge {
-    version = project.neoforge_version
+    version = project.neo_version
 
     validateAccessTransformers = true
 
     mods {
-        regutil {
+        create('regutil') {
             sourceSet this.sourceSets.main
         }
     }
 
+	def mainMod = mods.regutil
+
     unitTest {
         enable()
-        testedMod = mods.regutil
-        project.afterEvaluate {
-            idea {
-                project {
-                    settings {
-                        runConfigurations {
-                            defaults(JUnit) {
-                                vmParameters += " -Dforge.logging.console.level=debug"
-                                vmParameters += " -Dforge.logging.marker.scan=ACCEPT"
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        testedMod = mainMod
     }
 
     runs {
@@ -85,22 +80,22 @@ neoForge {
             logLevel = org.slf4j.event.Level.DEBUG
         }
 
-        client {
+		create('client') {
             client()
-            systemProperty 'forge.enabledGameTestNamespaces', mod_id
+            systemProperty 'forge.enabledGameTestNamespaces', this.project.mod_id
             programArguments.addAll '--username', secrets.getProperty("username") ?: 'Dev', secrets.getProperty("uuid") ? '--uuid' : '', secrets.getProperty("uuid") ?: ''
         }
 
-        server {
+		create('server') {
             server()
-            systemProperty 'forge.enabledGameTestNamespaces', mod_id
+            systemProperty 'forge.enabledGameTestNamespaces', this.project.mod_id
             programArgument '--nogui'
         }
 
-        data {
-            data()
+		create('data') {
+			clientData()
             gameDirectory = project.file('run-data')
-            programArguments.addAll '--mod', mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+            programArguments.addAll '--mod', this.project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
         }
     }
 }
@@ -114,12 +109,13 @@ repositories {
 }
 
 dependencies {
-    runtimeOnly "mezz.jei:jei-${project.base_minecraft_version}-neoforge:${project.jei_version}"
+    runtimeOnly "mezz.jei:jei-${project.minecraft_version}-neoforge:${project.jei_version}"
 
-    testImplementation group: 'net.neoforged', name: 'testframework', version: project.neoforge_version
-    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.10.3'
-    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.10.3'
-    testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '5.12.0'
+    testImplementation group: 'net.neoforged', name: 'testframework', version: project.neo_version
+	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '6.0.1'
+	testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '6.0.1'
+	testRuntimeOnly group: 'org.junit.platform', name: 'junit-platform-launcher', version: '6.0.1'
+	testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '5.21.0'
 }
 
 test {
@@ -136,8 +132,6 @@ test {
     }
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
-
 processResources {
     def version = project.version
     filesMatching("META-INF/neoforge.mods.toml") {
@@ -151,7 +145,7 @@ jar {
     //noinspection GroovyAssignabilityCheck
     manifest {
         attributes("FMLModType" : "GAMELIBRARY",
-                    "Specification-Title" : "RegUtil",
+                    "Specification-Title" : mod_id,
                     "Specification-Vendor" : "Tamaized",
                     "Specification-Version" : "${version}",
                     "Implementation-Title" : project.name,

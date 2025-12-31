@@ -2,31 +2,31 @@ package tamaized.regutil.item;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import tamaized.regutil.RegUtil;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 public class BreakableShield extends ShieldItem {
 
-	private final Tier tier;
 	private final Consumer<RegUtil.ToolAndArmorHelper.TooltipContext> tooltipConsumer;
 
-	public BreakableShield(Tier tier, Properties properties, Consumer<RegUtil.ToolAndArmorHelper.TooltipContext> tooltipConsumer) {
-		super(properties.durability(tier.getUses()));
-		this.tier = tier;
+	public BreakableShield(Properties properties, Consumer<RegUtil.ToolAndArmorHelper.TooltipContext> tooltipConsumer) {
+		super(properties);
 		this.tooltipConsumer = tooltipConsumer;
 	}
 
 	@Override
-	public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-		BreakableHelper.appendHoverText(stack, context, tooltipComponents, tooltipFlag, tooltipConsumer);
-		super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
+	@SuppressWarnings("deprecation")
+	public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag tooltipFlag) {
+		BreakableHelper.appendHoverText(stack, context, display, builder, tooltipFlag, tooltipConsumer);
+		super.appendHoverText(stack, context, display, builder, tooltipFlag);
 	}
 
 	@Override
@@ -39,18 +39,23 @@ public class BreakableShield extends ShieldItem {
 	}
 
 	@Override
-	public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
-		return BreakableHelper.use(playerIn, handIn, () -> super.use(worldIn, playerIn, handIn));
+	public float getDestroySpeed(ItemStack stack, BlockState state) {
+		return BreakableHelper.getDestroySpeed(stack, () -> super.getDestroySpeed(stack, state));
 	}
 
 	@Override
-	public int getEnchantmentValue(ItemStack stack) {
-		return tier.getEnchantmentValue();
+	public void postHurtEnemy(ItemStack itemStack, LivingEntity mob, LivingEntity attacker) {
+		super.postHurtEnemy(itemStack, mob, attacker);
 	}
 
 	@Override
-	public boolean isValidRepairItem(ItemStack toRepair, ItemStack repair) {
-		return tier.getRepairIngredient().test(repair);
+	public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+		BreakableHelper.hurtEnemy(stack, () -> super.hurtEnemy(stack, target, attacker));
+	}
+
+	@Override
+	public InteractionResult use(Level level, Player player, InteractionHand hand) {
+		return BreakableHelper.use(player, hand, () -> super.use(level, player, hand));
 	}
 
 }

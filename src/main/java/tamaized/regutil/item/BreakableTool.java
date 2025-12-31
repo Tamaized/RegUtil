@@ -1,23 +1,22 @@
 package tamaized.regutil.item;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.*;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.TooltipDisplay;
-import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.state.BlockState;
 import tamaized.regutil.RegUtil;
 
-import java.util.List;
 import java.util.function.Consumer;
 
-public class BreakableHoe extends HoeItem {
+public class BreakableTool extends Item {
 
 	private final Consumer<RegUtil.ToolAndArmorHelper.TooltipContext> tooltipConsumer;
 
-	public BreakableHoe(ToolMaterial tier, Properties properties, Consumer<RegUtil.ToolAndArmorHelper.TooltipContext> tooltipConsumer) {
-		super(tier, -3, 0.0F, properties);
+	public BreakableTool(Properties properties, Consumer<RegUtil.ToolAndArmorHelper.TooltipContext> tooltipConsumer) {
+		super(properties);
 		this.tooltipConsumer = tooltipConsumer;
 	}
 
@@ -39,13 +38,13 @@ public class BreakableHoe extends HoeItem {
 	}
 
 	@Override
-	public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-		BreakableHelper.hurtEnemy(stack, () -> super.hurtEnemy(stack, target, attacker));
+	public void postHurtEnemy(ItemStack itemStack, LivingEntity mob, LivingEntity attacker) {
+		super.postHurtEnemy(itemStack, mob, attacker);
 	}
 
 	@Override
-	public InteractionResult useOn(UseOnContext context) {
-		return BreakableHelper.useOn(context, () -> super.useOn(context));
+	public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+		BreakableHelper.hurtEnemy(stack, () -> super.hurtEnemy(stack, target, attacker));
 	}
 
 }

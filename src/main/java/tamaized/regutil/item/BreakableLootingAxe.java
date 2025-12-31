@@ -5,6 +5,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.state.BlockState;
 import tamaized.regutil.RegUtil;
@@ -16,15 +17,16 @@ public class BreakableLootingAxe extends LootingAxe {
 
 	private final Consumer<RegUtil.ToolAndArmorHelper.TooltipContext> tooltipConsumer;
 
-	public BreakableLootingAxe(Tier tier, Properties properties, Consumer<RegUtil.ToolAndArmorHelper.TooltipContext> tooltipConsumer) {
-		super(tier, properties.attributes(AxeItem.createAttributes(tier, 5F, -3.0F)));
+	public BreakableLootingAxe(ToolMaterial tier, Properties properties, Consumer<RegUtil.ToolAndArmorHelper.TooltipContext> tooltipConsumer) {
+		super(tier, properties);
 		this.tooltipConsumer = tooltipConsumer;
 	}
 
 	@Override
-	public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-		BreakableHelper.appendHoverText(stack, context, tooltipComponents, tooltipFlag, tooltipConsumer);
-		super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
+	@SuppressWarnings("deprecation")
+	public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag tooltipFlag) {
+		BreakableHelper.appendHoverText(stack, context, display, builder, tooltipFlag, tooltipConsumer);
+		super.appendHoverText(stack, context, display, builder, tooltipFlag);
 	}
 
 	@Override
@@ -38,8 +40,8 @@ public class BreakableLootingAxe extends LootingAxe {
 	}
 
 	@Override
-	public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-		return BreakableHelper.hurtEnemy(stack, () -> super.hurtEnemy(stack, target, attacker));
+	public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+		BreakableHelper.hurtEnemy(stack, () -> super.hurtEnemy(stack, target, attacker));
 	}
 
 	@Override

@@ -1,6 +1,6 @@
 package tamaized.regutil;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -22,7 +22,7 @@ public interface AttributeFactory extends Function<ItemStack, Stream<ItemAttribu
 		return stack -> list.stream()
 			.map(Supplier::get)
 			.filter(a -> a.test().test(stack))
-			.map(d -> new ItemAttributeModifiers.Entry(d.attribute(), new AttributeModifier(ResourceLocation.fromNamespaceAndPath(RegUtil.getModID(), d.id() + "_" + d.slot().getSerializedName()), d.value(), d.op()), d.slot()));
+			.map(d -> new ItemAttributeModifiers.Entry(d.attribute(), new AttributeModifier(Identifier.fromNamespaceAndPath(RegUtil.getModID(), d.id() + "_" + d.slot().getSerializedName()), d.value(), d.op()), d.slot()));
 	}
 
 }

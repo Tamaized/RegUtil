@@ -1,9 +1,8 @@
 package tamaized.regutil;
 
-import net.minecraft.client.model.HumanoidModel;
-import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.resources.model.EquipmentClientInfo;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -39,11 +38,15 @@ public class ArmorDataModel {
 
 	@Nullable
 	@OnlyIn(Dist.CLIENT)
-	public <A extends HumanoidModel<?>> A getArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlot armorSlot, A _default) {
+	public Model<?> getArmorModel(ItemStack itemStack, EquipmentClientInfo.LayerType layerType, Model<?> original) {
 		return null;
 	}
 
-	public Optional<ResourceLocation> getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, boolean inner) {
+	public void setupModelAnimations(LivingEntity livingEntity, ItemStack itemStack, EquipmentSlot equipmentSlot, Model<?> model, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
+
+	}
+
+	public Optional<Identifier> getArmorTexture(ItemStack stack, EquipmentClientInfo.LayerType type, EquipmentClientInfo.Layer layer) {
 		return Optional.empty();
 	}
 

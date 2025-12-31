@@ -1,6 +1,8 @@
-@MethodsReturnNonnullByDefault @ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault @ParametersAreNonnullByDefault @FieldsAreNonnullByDefault @TypeUseAreNonnullByDefault
 package tamaized.regutil.item;
 
-import net.minecraft.MethodsReturnNonnullByDefault;
+import com.mojang.logging.annotations.FieldsAreNonnullByDefault;
+import com.mojang.logging.annotations.MethodsReturnNonnullByDefault;
+import tamaized.regutil.TypeUseAreNonnullByDefault;
 
 import javax.annotation.ParametersAreNonnullByDefault;

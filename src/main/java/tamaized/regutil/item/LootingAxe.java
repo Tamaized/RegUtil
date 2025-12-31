@@ -5,7 +5,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.neoforged.neoforge.common.CommonHooks;
@@ -23,8 +23,8 @@ public abstract class LootingAxe extends AxeItem {
 		Stream.of(ItemAbilities.SWORD_SWEEP)
 	).collect(Collectors.toCollection(Sets::newIdentityHashSet));
 
-	public LootingAxe(Tier tier, Properties properties) {
-		super(tier, properties);
+	public LootingAxe(ToolMaterial tier, Properties properties) {
+		super(tier, 5F, -3.0F, properties);
 	}
 
 	@Override
@@ -34,7 +34,7 @@ public abstract class LootingAxe extends AxeItem {
 			return super.canPerformAction(stack, itemAbility);
 		return registry.get(Enchantments.SWEEPING_EDGE)
 			.filter(value -> stack.getEnchantmentLevel(value) > 0)
-			.map(value -> ACTIONS.contains(itemAbility))
+			.map(_ -> ACTIONS.contains(itemAbility))
 			.orElseGet(() -> super.canPerformAction(stack, itemAbility));
 	}
 }

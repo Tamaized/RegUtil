@@ -4,15 +4,14 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.UseOnContext;
 import tamaized.regutil.RegUtil;
 
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -22,10 +21,10 @@ public class BreakableHelper {
 		return stack.isDamageableItem() && stack.getDamageValue() >= stack.getMaxDamage() - 1;
 	}
 
-	public static void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag, Consumer<RegUtil.ToolAndArmorHelper.TooltipContext> tooltipConsumer) {
+	public static void appendHoverText(ItemStack stack, Item.TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag tooltipFlag, Consumer<RegUtil.ToolAndArmorHelper.TooltipContext> tooltipConsumer) {
 		if (isBroken(stack))
-			tooltipComponents.add(Component.translatable(RegUtil.getModID() + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
-		tooltipConsumer.accept(new RegUtil.ToolAndArmorHelper.TooltipContext(stack, context.level(), tooltipComponents, tooltipFlag));
+			builder.accept(Component.translatable(RegUtil.getModID() + ".tooltip.broken").withStyle(ChatFormatting.DARK_RED));
+		tooltipConsumer.accept(new RegUtil.ToolAndArmorHelper.TooltipContext(stack, context.level(), builder, tooltipFlag));
 	}
 
 	public static int damageItem(ItemStack stack, int amount, Consumer<Item> onBroken) {
@@ -39,13 +38,15 @@ public class BreakableHelper {
 		return isBroken(stack) ? 0 : superCall.get();
 	}
 
-	public static boolean hurtEnemy(ItemStack stack, Supplier<Boolean> superCall) {
-		return !isBroken(stack) && superCall.get();
+	public static void hurtEnemy(ItemStack stack, Runnable superCall) {
+		if(isBroken(stack))
+			return;
+		superCall.run();
 	}
 
-	public static InteractionResultHolder<ItemStack> use(Player playerIn, InteractionHand handIn, Supplier<InteractionResultHolder<ItemStack>> superCall) {
+	public static InteractionResult use(Player playerIn, InteractionHand handIn, Supplier<InteractionResult> superCall) {
 		final ItemStack stack = playerIn.getItemInHand(handIn);
-		return isBroken(stack) ? InteractionResultHolder.fail(stack) : superCall.get();
+		return isBroken(stack) ? InteractionResult.FAIL : superCall.get();
 	}
 
 	public static InteractionResult useOn(UseOnContext context, Supplier<InteractionResult> superCall) {

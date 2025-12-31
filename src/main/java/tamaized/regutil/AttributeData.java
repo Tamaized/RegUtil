@@ -19,7 +19,7 @@ public record AttributeData(Predicate<ItemStack> test, Holder<Attribute> attribu
 	}
 
 	public static AttributeData make(Predicate<ItemStack> test, Holder<Attribute> attribute, AttributeModifier.Operation op, double value, EquipmentSlotGroup slot) {
-		return make(test, attribute, attribute.unwrapKey().orElseThrow().location().getPath(), op, value, slot);
+		return make(test, attribute, attribute.unwrapKey().orElseThrow().identifier().getPath(), op, value, slot);
 	}
 
 	public static AttributeData make(Predicate<ItemStack> test, Holder<Attribute> attribute, String id, AttributeModifier.Operation op, double value, EquipmentSlotGroup slot) {
