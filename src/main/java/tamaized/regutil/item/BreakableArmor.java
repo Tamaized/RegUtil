@@ -14,25 +14,35 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.equipment.ArmorType;
 import org.jspecify.annotations.Nullable;
+import tamaized.beanification.Autowired;
+import tamaized.beanification.Configurable;
 import tamaized.regutil.ArmorData;
-import tamaized.regutil.RegUtil;
+import tamaized.regutil.ExtraTooltipContext;
+import tamaized.regutil.RegUtilModIdProvider;
 
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
+@Configurable
 public class BreakableArmor extends Item {
 
-	private final BiPredicate<ItemStack, Boolean> elytra;
-	private final Consumer<RegUtil.ToolAndArmorHelper.TooltipContext> tooltipConsumer;
+	@Autowired
+	private BreakableHelper breakableHelper;
 
-	public BreakableArmor(ArmorData data, BiPredicate<ItemStack, Boolean> elytra, ArmorType type, Properties properties, Consumer<RegUtil.ToolAndArmorHelper.TooltipContext> tooltipConsumer) {
+	@Autowired
+	private RegUtilModIdProvider modIdProvider;
+
+	private final BiPredicate<ItemStack, Boolean> elytra;
+	private final Consumer<ExtraTooltipContext> tooltipConsumer;
+
+	public BreakableArmor(ArmorData data, BiPredicate<ItemStack, Boolean> elytra, ArmorType type, Properties properties, Consumer<ExtraTooltipContext> tooltipConsumer) {
 		super(properties.humanoidArmor(data.material().value(), type).durability(type.getDurability(data.durabilityFactor())));
 		this.elytra = elytra;
 		this.tooltipConsumer = tooltipConsumer;
 	}
 
 	private boolean canElytraFly(ItemStack stack) {
-		return !BreakableHelper.isBroken(stack) && (elytra.test(stack, false));
+		return !breakableHelper.isBroken(stack) && (elytra.test(stack, false));
 	}
 
 	@Override
@@ -45,7 +55,7 @@ public class BreakableArmor extends Item {
 		else if (!glider && itemStack.has(DataComponents.GLIDER))
 			itemStack.remove(DataComponents.GLIDER);
 
-		if (slot != null && BreakableHelper.isBroken(itemStack)) {
+		if (slot != null && breakableHelper.isBroken(itemStack)) {
 			if (!(owner instanceof Player player) || !player.addItem(itemStack))
 				Containers.dropItemStack(level, owner.position().x(), owner.position().y(), owner.position().z(), itemStack);
 			else
@@ -57,14 +67,14 @@ public class BreakableArmor extends Item {
 	@SuppressWarnings("deprecation")
 	public void appendHoverText(ItemStack itemStack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag tooltipFlag) {
 		if (elytra.test(itemStack, false))
-			builder.accept(Component.translatable(RegUtil.getModID() + ".tooltip.elytra").withStyle(ChatFormatting.DARK_AQUA));
-		BreakableHelper.appendHoverText(itemStack, context, display, builder, tooltipFlag, tooltipConsumer);
+			builder.accept(Component.translatable(modIdProvider.getModId() + ".tooltip.elytra").withStyle(ChatFormatting.DARK_AQUA));
+		breakableHelper.appendHoverText(itemStack, context, display, builder, tooltipFlag, tooltipConsumer);
 		super.appendHoverText(itemStack, context, display, builder, tooltipFlag);
 	}
 
 	@Override
 	public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, @org.jetbrains.annotations.Nullable T entity, Consumer<Item> onBroken) {
-		return BreakableHelper.damageItem(stack, amount, onBroken);
+		return breakableHelper.damageItem(stack, amount, onBroken);
 	}
 
 }

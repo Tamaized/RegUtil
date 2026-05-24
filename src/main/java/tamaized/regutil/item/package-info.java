@@ -1,8 +1,11 @@
-@MethodsReturnNonnullByDefault @ParametersAreNonnullByDefault @FieldsAreNonnullByDefault @TypeUseAreNonnullByDefault
+@FieldsAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
+@TypeUseAreNonnullByDefault
 package tamaized.regutil.item;
 
 import com.mojang.logging.annotations.FieldsAreNonnullByDefault;
 import com.mojang.logging.annotations.MethodsReturnNonnullByDefault;
-import tamaized.regutil.TypeUseAreNonnullByDefault;
+import tamaized.pkginfoutil.TypeUseAreNonnullByDefault;
 
 import javax.annotation.ParametersAreNonnullByDefault;

@@ -1,90 +1,37 @@
 package tamaized.regutil;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.HumanoidModel;
-import net.minecraft.client.model.Model;
-import net.minecraft.client.model.geom.ModelLayerLocation;
-import net.minecraft.client.model.geom.ModelLayers;
-import net.minecraft.client.resources.model.EquipmentClientInfo;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.equipment.ArmorType;
-import net.minecraft.world.level.Level;
 import net.neoforged.fml.ModLoadingContext;
-import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.ItemAttributeModifierEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredRegister;
-import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
+import tamaized.beanification.Autowired;
+import tamaized.pkginfoutil.PublicApi;
 import tamaized.regutil.item.*;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.*;
 
-@SuppressWarnings({"unused", "DuplicatedCode", "UnusedReturnValue"})
+@tamaized.beanification.Component
 public class RegUtil {
 
-	@Nullable
-	private static String MODID = null;
-	@Nullable
-	private static String BROKEN_STATE_NAME;
+	@PublicApi
+	public static final String MODULE_NAME = "regutil";
 
-	private static final Map<ResourceKey<?>, DeferredRegister<?>> REGISTERS = new HashMap<>();
-	private static final Map<Item, List<DeferredHolder<Item, Item>>> BOWS = new HashMap<>() {{ // TODO: use an EnumMap instead
-		put(Items.BOW, new ArrayList<>());
-		put(Items.CROSSBOW, new ArrayList<>());
-	}};
-	private static final List<Pair<DeferredHolder<Item, Item>, AttributeFactory>> GEAR_ITEMS = new ArrayList<>();
-	private static final List<Pair<DeferredHolder<Item, Item>, Supplier<ArmorData>>> ARMOR_ITEMS = new ArrayList<>();
-	public static boolean renderingArmorOverlay = false;
+//	private final String brokenStateName;
 
-	public static String getModID() {
-		if (MODID == null)
-			initModID();
-		return MODID;
-	}
-
-	public static boolean isMyBow(ItemStack stack, Item check) {
-		List<DeferredHolder<Item, Item>> list = BOWS.get(check);
-		if (list == null)
-			return false;
-		for (DeferredHolder<Item, Item> o : list) {
-			if (o.isBound() && stack.is(o.get()))
-				return true;
-		}
-		return false;
-	}
-
-	public static boolean isArmorOverlay(ItemStack stack) {
-		return ARMOR_ITEMS.stream().anyMatch(o -> o.getValue().get().model().hasOverlay() && o.getKey().isBound() && stack.is(o.getKey().get()));
-	}
-
-	private static void initModID() {
-		if (MODID == null)
-			MODID = ModLoadingContext.get().getActiveNamespace();
-	}
-
-	@SafeVarargs
-	public static void setup(Supplier<RegistryClass>... inits) {
+	public RegUtil(
+		@Autowired RegUtilModIdProvider modIdProvider,
+		@Autowired Registers registers
+	) {
+		modIdProvider.setModId(ModLoadingContext.get().getActiveNamespace());
+//		brokenStateName = Identifier.fromNamespaceAndPath(modIdProvider.getModId().orElseThrow(), "broken_state_attributes").toString();
 		@NotNull IEventBus bus = Objects.requireNonNull(ModLoadingContext.get().getActiveContainer().getEventBus());
-		RegUtil.BROKEN_STATE_NAME = Identifier.fromNamespaceAndPath(getModID(), "broken_state_attributes").toString();
-		create(Registries.ITEM); // Pre-Bake the Item DeferredRegister for ToolAndArmorHelper
-		for (Supplier<RegistryClass> init : inits)
-			init.get().init(bus);
+		registers.create(Registries.ITEM); // Pre-Bake the Item DeferredRegister for ToolAndArmorHelper
 		// Looks like smithing templates merge data now instead of overwrite, TODO: double check this behavior
 		/*class FixedUpgradeRecipe extends SmithingTransformRecipe {
 			final Ingredient template;
@@ -137,138 +84,24 @@ public class RegUtil {
 			}
 
 		});*/
-		for (DeferredRegister<?> register : REGISTERS.values())
-			register.register(bus);
 
-		NeoForge.EVENT_BUS.addListener(ItemAttributeModifierEvent.class, event -> GEAR_ITEMS.stream()
-			.filter(p -> event.getItemStack().is(p.getKey().get()) && !BreakableHelper.isBroken(event.getItemStack()))
-			.forEach(p -> p.getValue().apply(event.getItemStack())
-				.forEach(e -> event.addModifier(e.attribute(), e.modifier(), e.slot())))
-		);
-
-		bus.addListener(RegisterClientExtensionsEvent.class, event -> ARMOR_ITEMS.forEach(p -> event.registerItem(new IClientItemExtensions() {
-			@Override
-			@SuppressWarnings({"rawtypes", "RedundantSuppression"})
-			public Model<?> getHumanoidArmorModel(ItemStack itemStack, EquipmentClientInfo.LayerType layerType, Model original) {
-				Model<?> model = p.getValue().get().model().getArmorModel(itemStack, layerType, original);
-				if (model != null)
-					return model;
-				if (!p.getValue().get().model().isFullbright() && !p.getValue().get().model().hasOverlay())
-					return IClientItemExtensions.super.getHumanoidArmorModel(itemStack, layerType, original);
-				ModelLayerLocation layer = layerType == EquipmentClientInfo.LayerType.HUMANOID_LEGGINGS ? ModelLayers.PLAYER_ARMOR.legs() : ModelLayers.PLAYER_ARMOR.head();
-				return new HumanoidModel<>(Minecraft.getInstance().getEntityModels().bakeLayer(layer)) {
-					@Override
-					public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, int color) {
-						final boolean fullbright = p.getValue().get().model().isFullbright() || (p.getValue().get().model().isOverlayFullbright() && RegUtil.renderingArmorOverlay);
-						super.renderToBuffer(poseStack, buffer, fullbright ? 0xF000F0 : packedLight, packedOverlay, color);
-					}
-				};
-			}
-
-			@Override
-			@SuppressWarnings({"rawtypes", "RedundantSuppression"})
-			public void setupModelAnimations(LivingEntity livingEntity, ItemStack itemStack, EquipmentSlot equipmentSlot, Model model, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
-				p.getValue().get().model().setupModelAnimations(livingEntity, itemStack, equipmentSlot, model, limbSwing, limbSwingAmount, partialTick, ageInTicks, netHeadYaw, headPitch);
-			}
-
-			@Override
-			public @org.jspecify.annotations.Nullable Identifier getArmorTexture(ItemStack stack, EquipmentClientInfo.LayerType type, EquipmentClientInfo.Layer layer, Identifier _default) {
-				return p.getValue().get().model().getArmorTexture(stack, type, layer).orElse(_default);
-			}
-		}, p.getKey())));
+		registers.getRegisters().forEach(register -> register.register(bus));
 	}
 
-	@SuppressWarnings("unchecked")
-	public static <R> DeferredRegister<R> create(ResourceKey<Registry<R>> type) {
-		initModID();
-		DeferredRegister<?> value = REGISTERS.get(type);
-		if (value != null)
-			return (DeferredRegister<R>) value;
-		DeferredRegister<R> def = DeferredRegister.create(type, RegUtil.getModID());
-		REGISTERS.put(type, def);
-		if (type.equals(Registries.ITEM))
-			ToolAndArmorHelper.REGISTRY = (DeferredRegister<Item>) def;
-		return def;
+	@PublicApi
+	public static <R, T extends R> DeferredHolder<R, T> register(ResourceKey<Registry<R>> registry, final String name, final Function<Identifier, ? extends T> func) {
+		if (Registers.INSTANCE.modIdProvider == null) {
+			RegUtilModIdProvider tmpWire = new RegUtilModIdProvider();
+			tmpWire.setModId(ModLoadingContext.get().getActiveNamespace());
+			Registers.INSTANCE.modIdProvider = tmpWire;
+		}
+
+		return Registers.INSTANCE.create(registry).register(name, func);
 	}
 
-	public static class ToolAndArmorHelper {
-
-		private static DeferredRegister<Item> REGISTRY;
-
-		public record TooltipContext(ItemStack stack, @Nullable Level worldIn, Consumer<Component> tooltip, TooltipFlag flagIn) {
-			public static final Consumer<TooltipContext> EMPTY = context -> {
-			};
-		}
-
-		public static DeferredHolder<Item, Item> sword(String baseName, Supplier<ToolMaterial> tier, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return gear("sword", baseName, factory, () -> new BreakableTool(properties.get().sword(tier.get(), 3, -2.4F), tooltipConsumer));
-		}
-
-		public static DeferredHolder<Item, Item> shield(String baseName, Supplier<ToolMaterial> tier, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return gear("shield", baseName, factory, () -> new BreakableShield(properties.get().durability(tier.get().durability()), tooltipConsumer));
-		}
-
-		private static DeferredHolder<Item, Item> registerBow(Item item, DeferredHolder<Item, Item> o) {
-			if (BOWS.containsKey(item))
-				BOWS.get(item).add(o);
-			return o;
-		}
-
-		public static DeferredHolder<Item, Item> bow(String baseName, Supplier<ToolMaterial> tier, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return registerBow(Items.BOW, gear("bow", baseName, factory, () -> new BreakableBow(properties.get().durability(tier.get().durability()), tooltipConsumer)));
-		}
-
-		public static DeferredHolder<Item, Item> xbow(String baseName, Supplier<ToolMaterial> tier, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return registerBow(Items.CROSSBOW, gear("xbow", baseName, factory, () -> new BreakableCrossbow(properties.get().durability(tier.get().durability()), tooltipConsumer)));
-		}
-
-		public static DeferredHolder<Item, Item> axe(String baseName, Supplier<ToolMaterial> tier, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return gear("axe", baseName, factory, () -> new BreakableLootingAxe(tier.get(), properties.get(), tooltipConsumer));
-		}
-
-		public static DeferredHolder<Item, Item> pickaxe(String baseName, Supplier<ToolMaterial> tier, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return gear("pickaxe", baseName, factory, () -> new BreakableTool(properties.get().pickaxe(tier.get(), 1, -2.8F), tooltipConsumer));
-		}
-
-		public static DeferredHolder<Item, Item> shovel(String baseName, Supplier<ToolMaterial> tier, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return gear("shovel", baseName, factory, () -> new BreakableShovel(tier.get(), properties.get(), tooltipConsumer));
-		}
-
-		public static DeferredHolder<Item, Item> hoe(String baseName, Supplier<ToolMaterial> tier, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return gear("hoe", baseName, factory, () -> new BreakableHoe(tier.get(), properties.get(), tooltipConsumer));
-		}
-
-		public static DeferredHolder<Item, Item> helmet(String baseName, Supplier<ArmorData> data, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return gear("helmet", baseName, factory, data, () -> new BreakableArmor(data.get(), (stack, tick) -> false, ArmorType.HELMET, properties.get(), tooltipConsumer));
-		}
-
-		public static DeferredHolder<Item, Item> chest(String baseName, Supplier<ArmorData> data, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return gear("chest", baseName, factory, data, () -> new BreakableArmor(data.get(), (stack, tick) -> false, ArmorType.CHESTPLATE, properties.get(), tooltipConsumer));
-		}
-
-		public static DeferredHolder<Item, Item> chest(String baseName, Supplier<ArmorData> data, Supplier<Item.Properties> properties, AttributeFactory factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<TooltipContext> tooltipConsumer) {
-			return gear("chest", baseName, factory, data, () -> new BreakableArmor(data.get(), elytra, ArmorType.CHESTPLATE, properties.get(), tooltipConsumer));
-		}
-
-		public static DeferredHolder<Item, Item> legs(String baseName, Supplier<ArmorData> data, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return gear("legs", baseName, factory, data, () -> new BreakableArmor(data.get(), (stack, tick) -> false, ArmorType.LEGGINGS, properties.get(), tooltipConsumer));
-		}
-
-		public static DeferredHolder<Item, Item> boots(String baseName, Supplier<ArmorData> data, Supplier<Item.Properties> properties, AttributeFactory factory, Consumer<TooltipContext> tooltipConsumer) {
-			return gear("boots", baseName, factory, data, () -> new BreakableArmor(data.get(), (stack, tick) -> false, ArmorType.BOOTS, properties.get(), tooltipConsumer));
-		}
-
-		public static DeferredHolder<Item, Item> gear(String type, String baseName, AttributeFactory factory, Supplier<Item> itemInit) {
-			return gear(type, baseName, factory, null, itemInit);
-		}
-
-		public static DeferredHolder<Item, Item> gear(String type, String baseName, AttributeFactory factory, @Nullable Supplier<ArmorData> armorData, Supplier<Item> itemInit) {
-			DeferredHolder<Item, Item> object = REGISTRY.register(baseName.concat("_").concat(type), itemInit);
-			GEAR_ITEMS.add(Pair.of(object, factory));
-			if (armorData != null)
-				ARMOR_ITEMS.add(Pair.of(object, armorData));
-			return object;
-		}
+	@PublicApi
+	public static <R, T extends R> DeferredHolder<R, T> register(ResourceKey<Registry<R>> registry, final String name, final Supplier<? extends T> func) {
+		return register(registry, name, (_) -> func.get());
 	}
 
 }

@@ -120,12 +120,11 @@ repositories {
 dependencies {
 //    runtimeOnly "mezz.jei:jei-${project.minecraft_version}-neoforge:${project.jei_version}"
 
-	def beanification = "tamaized:beanification:${project.beanification_version}"
-	implementation beanification
+	implementation "tamaized:datagenutil:${project.datagenutil_version}"
+
+	def beanification = "tamaized:beanification:"
 	testImplementation "${beanification}:tests"
 	testCompileOnly "${beanification}:test-sources"
-
-	implementation "tamaized:pkginfoutil:${project.pkginfoutil_version}"
 
 	testImplementation group: 'net.neoforged', name: 'testframework', version: project.neoforge_version
 	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '6.0.1'
@@ -186,8 +185,7 @@ publishing {
 
 			def depsProvider = this.project.provider {
 				[
-					beanification_version: this.project.beanification_version,
-					pkginfoutil_version: this.project.pkginfoutil_version
+					datagenutil_version: this.project.datagenutil_version
 				]
 			}
 
@@ -204,8 +202,7 @@ publishing {
 
 				def deps = depsProvider.get()
 
-				addDep('tamaized', 'beanification', deps.beanification_version)
-				addDep('tamaized', 'pkginfoutil', deps.pkginfoutil_version)
+				addDep('tamaized', 'datagenutil', deps.datagenutil_version)
 			}
         }
     }
