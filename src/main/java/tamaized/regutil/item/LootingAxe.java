@@ -4,7 +4,7 @@ import com.google.common.collect.Sets;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.AxeItem;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemInstance;
 import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -28,7 +28,7 @@ public abstract class LootingAxe extends AxeItem {
 	}
 
 	@Override
-	public boolean canPerformAction(ItemStack stack, ItemAbility itemAbility) {
+	public boolean canPerformAction(ItemInstance stack, ItemAbility itemAbility) {
 		HolderLookup.RegistryLookup<Enchantment> registry = CommonHooks.resolveLookup(Registries.ENCHANTMENT);
 		if (registry == null)
 			return super.canPerformAction(stack, itemAbility);

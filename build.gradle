@@ -8,6 +8,11 @@ plugins {
     id "com.dorongold.task-tree" version "4.0.0"
 }
 
+wrapper {
+	gradleVersion = '9.1.0'
+	distributionType = Wrapper.DistributionType.ALL
+}
+
 def secrets = new Properties()
 def secretsFile = file('secrets.properties')
 if (secretsFile.exists()) {
@@ -32,7 +37,7 @@ idea {
     }
 }
 
-version = "${project.minecraft_version}-${project.mod_major_version}." + (hasProperty("CIVersion") ? CIVersion : mod_version)
+version = "${project.mod_major_version}." + (hasProperty("CIVersion") ? CIVersion : mod_version)
 group = group_name
 
 java {
@@ -56,7 +61,7 @@ sourceSets {
 }
 
 neoForge {
-    version = project.neo_version
+	version = project.neoforge_version
 
     validateAccessTransformers = true
 
@@ -102,6 +107,10 @@ neoForge {
 
 repositories {
     mavenLocal()
+	maven {
+		name 'Tama\'s Maven'
+		url 'https://maven.tamaized.com/releases/'
+	}
     maven {
         name 'Jared\'s Maven' // JEI
         url 'https://maven.blamejared.com/'
@@ -109,9 +118,16 @@ repositories {
 }
 
 dependencies {
-    runtimeOnly "mezz.jei:jei-${project.minecraft_version}-neoforge:${project.jei_version}"
+//    runtimeOnly "mezz.jei:jei-${project.minecraft_version}-neoforge:${project.jei_version}"
 
-    testImplementation group: 'net.neoforged', name: 'testframework', version: project.neo_version
+	def beanification = "tamaized:beanification:${project.beanification_version}"
+	implementation beanification
+	testImplementation "${beanification}:tests"
+	testCompileOnly "${beanification}:test-sources"
+
+	implementation "tamaized:pkginfoutil:${project.pkginfoutil_version}"
+
+	testImplementation group: 'net.neoforged', name: 'testframework', version: project.neoforge_version
 	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '6.0.1'
 	testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '6.0.1'
 	testRuntimeOnly group: 'org.junit.platform', name: 'junit-platform-launcher', version: '6.0.1'
@@ -133,12 +149,12 @@ test {
 }
 
 processResources {
-    def version = project.version
-    filesMatching("META-INF/neoforge.mods.toml") {
-        expand([
-                'file': ['jarVersion': "${version}"]
-        ])
-    }
+	def version = project.version
+	filesMatching("META-INF/neoforge.mods.toml") {
+		expand([
+			'file': ['jarVersion': "${version}"]
+		])
+	}
 }
 
 jar {
@@ -167,6 +183,30 @@ publishing {
             }
             groupId 'tamaized'
             artifactId this.project.mod_id
+
+			def depsProvider = this.project.provider {
+				[
+					beanification_version: this.project.beanification_version,
+					pkginfoutil_version: this.project.pkginfoutil_version
+				]
+			}
+
+			pom.withXml {
+				def dependenciesNode = asNode().appendNode('dependencies')
+
+				def addDep = { String group, String name, String version ->
+					def depNode = dependenciesNode.appendNode('dependency')
+					depNode.appendNode('groupId', group)
+					depNode.appendNode('artifactId', name)
+					depNode.appendNode('version', version)
+					depNode.appendNode('scope', 'compile')
+				}
+
+				def deps = depsProvider.get()
+
+				addDep('tamaized', 'beanification', deps.beanification_version)
+				addDep('tamaized', 'pkginfoutil', deps.pkginfoutil_version)
+			}
         }
     }
     repositories {
