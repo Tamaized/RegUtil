@@ -36,7 +36,7 @@ public class BreakableArmor extends Item {
 	private final Consumer<ExtraTooltipContext> tooltipConsumer;
 
 	public BreakableArmor(ArmorData data, BiPredicate<ItemStack, Boolean> elytra, ArmorType type, Properties properties, Consumer<ExtraTooltipContext> tooltipConsumer) {
-		super(properties.humanoidArmor(data.material(), type).durability(type.getDurability(data.durabilityFactor())));
+		super(properties.humanoidArmor(data.material(), type));
 		this.elytra = elytra;
 		this.tooltipConsumer = tooltipConsumer;
 	}
