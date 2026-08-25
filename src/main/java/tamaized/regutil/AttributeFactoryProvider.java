@@ -14,8 +14,11 @@ import java.util.function.Supplier;
 @Component
 public class AttributeFactoryProvider {
 
-	@Autowired
-	private RegUtilModIdProvider modIdProvider;
+	private final RegUtilModIdProvider modIdProvider;
+
+	public AttributeFactoryProvider(@Autowired RegUtilModIdProvider modIdProvider) {
+		this.modIdProvider = modIdProvider;
+	}
 
 	@PublicApi
 	@SafeVarargs

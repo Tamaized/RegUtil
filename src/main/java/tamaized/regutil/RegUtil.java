@@ -22,14 +22,12 @@ public class RegUtil {
 	@PublicApi
 	public static final String MODULE_NAME = "regutil";
 
-//	private final String brokenStateName;
 
 	public RegUtil(
 		@Autowired RegUtilModIdProvider modIdProvider,
 		@Autowired Registers registers
 	) {
 		modIdProvider.setModId(ModLoadingContext.get().getActiveNamespace());
-//		brokenStateName = Identifier.fromNamespaceAndPath(modIdProvider.getModId().orElseThrow(), "broken_state_attributes").toString();
 		@NotNull IEventBus bus = Objects.requireNonNull(ModLoadingContext.get().getActiveContainer().getEventBus());
 		registers.create(Registries.ITEM); // Pre-Bake the Item DeferredRegister for ToolAndArmorHelper
 		registers.getRegisters().forEach(register -> register.register(bus));

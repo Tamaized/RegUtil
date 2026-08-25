@@ -18,11 +18,14 @@ import java.util.function.Supplier;
 @Component
 public class ToolAndArmorHelper {
 
-	@Autowired
-	private Registers registers;
+	private final Registers registers;
 
-	@Autowired
-	private GearItemHandler gearItemHandler;
+	private final GearItemHandler gearItemHandler;
+
+	public ToolAndArmorHelper(@Autowired Registers registers, @Autowired GearItemHandler gearItemHandler) {
+		this.registers = registers;
+		this.gearItemHandler = gearItemHandler;
+	}
 
 	public enum BowType {
 		BOW,
