@@ -3,6 +3,7 @@ package tamaized.regutil;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.equipment.ArmorMaterial;
 import net.minecraft.world.item.equipment.ArmorType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import tamaized.beanification.Autowired;
@@ -108,41 +109,34 @@ public class ToolAndArmorHelper {
 	}
 
 	@PublicApi
-	public DeferredHolder<Item, Item> helmet(String baseName, Supplier<ArmorData> data, Function<Identifier, Item.Properties> properties, AttributeFactory factory, Consumer<ExtraTooltipContext> tooltipConsumer) {
-		return gear("helmet", baseName, factory, data, (id) -> new BreakableArmor(data.get(), (_, _) -> false, ArmorType.HELMET, properties.apply(id), tooltipConsumer));
+	public DeferredHolder<Item, Item> helmet(String baseName, Supplier<ArmorMaterial> material, Function<Identifier, Item.Properties> properties, AttributeFactory factory, Consumer<ExtraTooltipContext> tooltipConsumer) {
+		return gear("helmet", baseName, factory, (id) -> new BreakableArmor(material.get(), (_, _) -> false, ArmorType.HELMET, properties.apply(id), tooltipConsumer));
 	}
 
 	@PublicApi
-	public DeferredHolder<Item, Item> chest(String baseName, Supplier<ArmorData> data, Function<Identifier, Item.Properties> properties, AttributeFactory factory, Consumer<ExtraTooltipContext> tooltipConsumer) {
-		return gear("chest", baseName, factory, data, (id) -> new BreakableArmor(data.get(), (_, _) -> false, ArmorType.CHESTPLATE, properties.apply(id), tooltipConsumer));
+	public DeferredHolder<Item, Item> chest(String baseName, Supplier<ArmorMaterial> material, Function<Identifier, Item.Properties> properties, AttributeFactory factory, Consumer<ExtraTooltipContext> tooltipConsumer) {
+		return gear("chest", baseName, factory, (id) -> new BreakableArmor(material.get(), (_, _) -> false, ArmorType.CHESTPLATE, properties.apply(id), tooltipConsumer));
 	}
 
 	@PublicApi
-	public DeferredHolder<Item, Item> chest(String baseName, Supplier<ArmorData> data, Function<Identifier, Item.Properties> properties, AttributeFactory factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<ExtraTooltipContext> tooltipConsumer) {
-		return gear("chest", baseName, factory, data, (id) -> new BreakableArmor(data.get(), elytra, ArmorType.CHESTPLATE, properties.apply(id), tooltipConsumer));
+	public DeferredHolder<Item, Item> chest(String baseName, Supplier<ArmorMaterial> material, Function<Identifier, Item.Properties> properties, AttributeFactory factory, BiPredicate<ItemStack, Boolean> elytra, Consumer<ExtraTooltipContext> tooltipConsumer) {
+		return gear("chest", baseName, factory, (id) -> new BreakableArmor(material.get(), elytra, ArmorType.CHESTPLATE, properties.apply(id), tooltipConsumer));
 	}
 
 	@PublicApi
-	public DeferredHolder<Item, Item> legs(String baseName, Supplier<ArmorData> data, Function<Identifier, Item.Properties> properties, AttributeFactory factory, Consumer<ExtraTooltipContext> tooltipConsumer) {
-		return gear("legs", baseName, factory, data, (id) -> new BreakableArmor(data.get(), (_, _) -> false, ArmorType.LEGGINGS, properties.apply(id), tooltipConsumer));
+	public DeferredHolder<Item, Item> legs(String baseName, Supplier<ArmorMaterial> material, Function<Identifier, Item.Properties> properties, AttributeFactory factory, Consumer<ExtraTooltipContext> tooltipConsumer) {
+		return gear("legs", baseName, factory, (id) -> new BreakableArmor(material.get(), (_, _) -> false, ArmorType.LEGGINGS, properties.apply(id), tooltipConsumer));
 	}
 
 	@PublicApi
-	public DeferredHolder<Item, Item> boots(String baseName, Supplier<ArmorData> data, Function<Identifier, Item.Properties> properties, AttributeFactory factory, Consumer<ExtraTooltipContext> tooltipConsumer) {
-		return gear("boots", baseName, factory, data, (id) -> new BreakableArmor(data.get(), (_, _) -> false, ArmorType.BOOTS, properties.apply(id), tooltipConsumer));
+	public DeferredHolder<Item, Item> boots(String baseName, Supplier<ArmorMaterial> material, Function<Identifier, Item.Properties> properties, AttributeFactory factory, Consumer<ExtraTooltipContext> tooltipConsumer) {
+		return gear("boots", baseName, factory, (id) -> new BreakableArmor(material.get(), (_, _) -> false, ArmorType.BOOTS, properties.apply(id), tooltipConsumer));
 	}
 
 	@PublicApi
 	public DeferredHolder<Item, Item> gear(String type, String baseName, AttributeFactory factory, Function<Identifier, Item> itemInit) {
-		return gear(type, baseName, factory, null, itemInit);
-	}
-
-	@PublicApi
-	public DeferredHolder<Item, Item> gear(String type, String baseName, AttributeFactory factory, @Nullable Supplier<ArmorData> armorData, Function<Identifier, Item> itemInit) {
 		DeferredHolder<Item, Item> object = registers.create(Registries.ITEM).register(baseName.concat("_").concat(type), itemInit);
 		gearItemHandler.addGearFactory(object, factory);
-		if (armorData != null)
-			gearItemHandler.addArmorFactory(object, armorData);
 		return object;
 	}
 

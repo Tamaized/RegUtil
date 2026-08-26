@@ -12,11 +12,11 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.TooltipDisplay;
+import net.minecraft.world.item.equipment.ArmorMaterial;
 import net.minecraft.world.item.equipment.ArmorType;
 import org.jspecify.annotations.Nullable;
 import tamaized.beanification.Autowired;
 import tamaized.beanification.Configurable;
-import tamaized.regutil.ArmorData;
 import tamaized.regutil.ExtraTooltipContext;
 import tamaized.regutil.RegUtilModIdProvider;
 
@@ -35,8 +35,8 @@ public class BreakableArmor extends Item {
 	private final BiPredicate<ItemStack, Boolean> elytra;
 	private final Consumer<ExtraTooltipContext> tooltipConsumer;
 
-	public BreakableArmor(ArmorData data, BiPredicate<ItemStack, Boolean> elytra, ArmorType type, Properties properties, Consumer<ExtraTooltipContext> tooltipConsumer) {
-		super(properties.humanoidArmor(data.material(), type));
+	public BreakableArmor(ArmorMaterial material, BiPredicate<ItemStack, Boolean> elytra, ArmorType type, Properties properties, Consumer<ExtraTooltipContext> tooltipConsumer) {
+		super(properties.humanoidArmor(material, type));
 		this.elytra = elytra;
 		this.tooltipConsumer = tooltipConsumer;
 	}
