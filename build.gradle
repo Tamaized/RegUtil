@@ -1,3 +1,15 @@
+buildscript {
+	repositories {
+		maven {
+			name 'Beanification'
+			url 'https://maven.tamaized.com/releases/'
+		}
+	}
+	dependencies {
+		classpath "tamaized:beanification:${beanification_gradle_plugin_version}:gradle"
+	}
+}
+
 plugins {
     id 'java-library'
     id 'eclipse'
@@ -7,6 +19,8 @@ plugins {
     id 'net.neoforged.moddev' version "${mdg_version}"
     id "com.dorongold.task-tree" version "4.0.0"
 }
+
+apply plugin: 'tamaized.beanification'
 
 wrapper {
 	gradleVersion = '9.1.0'
