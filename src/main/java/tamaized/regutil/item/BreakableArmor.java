@@ -67,7 +67,7 @@ public class BreakableArmor extends Item {
 	@SuppressWarnings("deprecation")
 	public void appendHoverText(ItemStack itemStack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag tooltipFlag) {
 		if (elytra.test(itemStack, false))
-			builder.accept(Component.translatable(modIdProvider.getModId() + ".tooltip.elytra").withStyle(ChatFormatting.DARK_AQUA));
+			builder.accept(Component.translatable(modIdProvider.getModId().orElseThrow() + ".tooltip.elytra").withStyle(ChatFormatting.DARK_AQUA));
 		breakableHelper.appendHoverText(itemStack, context, display, builder, tooltipFlag, tooltipConsumer);
 		super.appendHoverText(itemStack, context, display, builder, tooltipFlag);
 	}
