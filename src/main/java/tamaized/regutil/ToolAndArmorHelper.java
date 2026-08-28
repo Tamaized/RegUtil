@@ -97,12 +97,12 @@ public class ToolAndArmorHelper {
 
 	@PublicApi
 	public DeferredHolder<Item, Item> bow(String baseName, Supplier<ToolMaterial> tier, Function<Identifier, Item.Properties> properties, AttributeFactory factory, Consumer<ExtraTooltipContext> tooltipConsumer) {
-		return registerBow(Items.BOW, gear("bow", baseName, factory, (id) -> new BreakableBow(properties.apply(id).durability(tier.get().durability()), tooltipConsumer)));
+		return registerBow(Items.BOW, gear("bow", baseName, factory, (id) -> new BreakableBow(properties.apply(id).durability(tier.get().durability()).repairable(tier.get().repairItems()), tooltipConsumer)));
 	}
 
 	@PublicApi
 	public DeferredHolder<Item, Item> xbow(String baseName, Supplier<ToolMaterial> tier, Function<Identifier, Item.Properties> properties, AttributeFactory factory, Consumer<ExtraTooltipContext> tooltipConsumer) {
-		return registerBow(Items.CROSSBOW, gear("xbow", baseName, factory, (id) -> new BreakableCrossbow(properties.apply(id).durability(tier.get().durability()), tooltipConsumer)));
+		return registerBow(Items.CROSSBOW, gear("xbow", baseName, factory, (id) -> new BreakableCrossbow(properties.apply(id).durability(tier.get().durability()).repairable(tier.get().repairItems()), tooltipConsumer)));
 	}
 
 	@PublicApi
