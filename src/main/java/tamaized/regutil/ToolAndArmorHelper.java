@@ -1,8 +1,13 @@
 package tamaized.regutil;
 
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.BlocksAttacks;
 import net.minecraft.world.item.equipment.ArmorMaterial;
 import net.minecraft.world.item.equipment.ArmorType;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -11,7 +16,6 @@ import tamaized.beanification.Component;
 import tamaized.pkginfoutil.PublicApi;
 import tamaized.regutil.item.*;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -70,7 +74,20 @@ public class ToolAndArmorHelper {
 
 	@PublicApi
 	public DeferredHolder<Item, Item> shield(String baseName, Supplier<ToolMaterial> tier, Function<Identifier, Item.Properties> properties, AttributeFactory factory, Consumer<ExtraTooltipContext> tooltipConsumer) {
-		return gear("shield", baseName, factory, (id) -> new BreakableShield(properties.apply(id).durability(tier.get().durability()), tooltipConsumer));
+		return gear("shield", baseName, factory, (id) -> new BreakableShield(properties.apply(id)
+			.durability(tier.get().durability())
+			.repairable(tier.get().repairItems())
+			.equippableUnswappable(EquipmentSlot.OFFHAND)
+			.component(DataComponents.BREAK_SOUND, SoundEvents.SHIELD_BREAK)
+			.delayedComponent(DataComponents.BLOCKS_ATTACKS, context -> new BlocksAttacks(
+				0.25F,
+				1.0F,
+				List.of(new BlocksAttacks.DamageReduction(90.0F, Optional.empty(), 0.0F, 1.0F)),
+				new BlocksAttacks.ItemDamageFunction(3.0F, 1.0F, 1.0F),
+				Optional.of(context.getOrThrow(DamageTypeTags.BYPASSES_SHIELD)),
+				Optional.of(SoundEvents.SHIELD_BLOCK),
+				Optional.of(SoundEvents.SHIELD_BREAK)
+			)), tooltipConsumer));
 	}
 
 	private DeferredHolder<Item, Item> registerBow(Item item, DeferredHolder<Item, Item> o) {
