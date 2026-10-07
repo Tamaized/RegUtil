@@ -24,9 +24,14 @@ public class GearItemHandler {
 	@PostConstruct(PostConstruct.Bus.GAME)
 	private void setup(IEventBus gameBus) {
 		gameBus.addListener(ItemAttributeModifierEvent.class, event -> gearItems.stream()
-			.filter(p -> event.getItemStack().is(p.getKey().get()) && !breakableHelper.isBroken(event.getItemStack()))
-			.forEach(p -> p.getValue().apply(event.getItemStack())
-				.forEach(e -> event.addModifier(e.attribute(), e.modifier(), e.slot())))
+			.filter(p -> event.getItemStack().is(p.getKey().get()))
+			.forEach(p -> {
+				if (breakableHelper.isBroken(event.getItemStack()))
+					event.clearModifiers();
+				else
+					p.getValue().apply(event.getItemStack())
+						.forEach(e -> event.addModifier(e.attribute(), e.modifier(), e.slot()));
+			})
 		);
 	}
 

@@ -55,7 +55,7 @@ public class BreakableArmor extends Item {
 		else if (!glider && itemStack.has(DataComponents.GLIDER))
 			itemStack.remove(DataComponents.GLIDER);
 
-		if (slot != null && breakableHelper.isBroken(itemStack)) {
+		if (slot != null && slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR && breakableHelper.isBroken(itemStack)) {
 			if (!(owner instanceof Player player) || !player.addItem(itemStack))
 				Containers.dropItemStack(level, owner.position().x(), owner.position().y(), owner.position().z(), itemStack);
 			else

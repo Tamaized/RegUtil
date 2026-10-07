@@ -1,5 +1,6 @@
 buildscript {
 	repositories {
+		mavenLocal()
 		maven {
 			name 'Beanification'
 			url 'https://maven.tamaized.com/releases/'

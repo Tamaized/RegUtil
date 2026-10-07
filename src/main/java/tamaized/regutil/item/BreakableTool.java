@@ -44,11 +44,6 @@ public class BreakableTool extends Item {
 	}
 
 	@Override
-	public void postHurtEnemy(ItemStack itemStack, LivingEntity mob, LivingEntity attacker) {
-		super.postHurtEnemy(itemStack, mob, attacker);
-	}
-
-	@Override
 	public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
 		breakableHelper.hurtEnemy(stack, () -> super.hurtEnemy(stack, target, attacker));
 	}
