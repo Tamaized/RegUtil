@@ -90,7 +90,8 @@ public class ToolAndArmorHelper {
 			)), tooltipConsumer));
 	}
 
-	private DeferredHolder<Item, Item> registerBow(Item item, DeferredHolder<Item, Item> o) {
+	@PublicApi
+	public DeferredHolder<Item, Item> registerBow(Item item, DeferredHolder<Item, Item> o) {
 		BowType.getTypeFromItem(item).map(registeredBows::get).ifPresent(list -> list.add(o));
 		return o;
 	}
