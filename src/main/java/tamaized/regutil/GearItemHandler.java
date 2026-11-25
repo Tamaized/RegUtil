@@ -7,7 +7,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import org.apache.commons.lang3.tuple.Pair;
 import tamaized.beanification.Autowired;
 import tamaized.beanification.Component;
-import tamaized.beanification.PostConstruct;
+import tamaized.beanification.connector.fml.EventBusPostConstruct;
 import tamaized.regutil.item.BreakableHelper;
 
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ public class GearItemHandler {
 
 	private final List<Pair<DeferredHolder<Item, Item>, AttributeFactory>> gearItems = new ArrayList<>();
 
-	@PostConstruct(PostConstruct.Bus.GAME)
+	@EventBusPostConstruct(EventBusPostConstruct.Bus.GAME)
 	private void setup(IEventBus gameBus) {
 		gameBus.addListener(ItemAttributeModifierEvent.class, event -> gearItems.stream()
 			.filter(p -> event.getItemStack().is(p.getKey().get()))
